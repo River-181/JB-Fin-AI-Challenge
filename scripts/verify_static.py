@@ -62,6 +62,8 @@ js_needles = [
     "Jeonse Shield Lead",
     "Registry Rights Agent",
     "orgChartView",
+    "org-diagram",
+    "org-branch-grid",
     "jeonseView",
     "jeonse-price-ratio",
     "runAgents",

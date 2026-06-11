@@ -1087,50 +1087,96 @@ function agentsView() {
 }
 
 function orgChartView() {
-  const humanLeads = ["Human RM Lead", "Human Compliance Lead"];
-  const childAgents = (leader) => agents.filter((agent) => agent.reportsTo === leader || agent.reportsTo === `${leader} Agent`);
-  const rootChildren = agents.filter((agent) => agent.reportsTo === "Human RM Lead" || agent.reportsTo === "Human Compliance Lead");
-  const byLead = [
-    ["Human RM Lead", rootChildren.filter((agent) => agent.reportsTo === "Human RM Lead")],
-    ["Human Compliance Lead", rootChildren.filter((agent) => agent.reportsTo === "Human Compliance Lead")],
-    ["LocalGuard Orchestrator", childAgents("LocalGuard Orchestrator")],
-    ["Jeonse Shield Lead", childAgents("Jeonse Shield Lead")],
-    ["Compliance Guard Agent", childAgents("Compliance Guard")],
+  const agentById = Object.fromEntries(agents.map((agent) => [agent.id, agent]));
+  const branches = [
+    {
+      title: "Regional Pain Radar",
+      subtitle: "기사·공식자료·상담메모 기반 지역 금융 pain signal",
+      agents: ["pain-radar", "cashflow", "policy", "analytics"],
+    },
+    {
+      title: "Jeonse Shield Line",
+      subtitle: "전세가율·권리관계·고객 자산노출·은행 연계",
+      agents: ["jeonse-lead", "deposit-ratio", "registry-rights", "tenant-asset", "bank-linkage"],
+      featured: true,
+    },
+    {
+      title: "Approval & Customer Ops",
+      subtitle: "RM 초안, 승인 게이트, 고객 안내 전 통제",
+      agents: ["rm-copilot"],
+    },
+    {
+      title: "Fraud & Compliance",
+      subtitle: "사기 차단, 준법 검토, 특약/계약 문구 통제",
+      agents: ["fraud", "contract-check"],
+    },
   ];
 
   return `
-    <div class="org-chart">
-      <div class="org-root">
-        ${humanLeads.map((lead) => `<div class="org-node human"><strong>${escapeHtml(lead)}</strong><span>최종 승인권자</span></div>`).join("")}
+    <div class="org-diagram" role="img" aria-label="JB LocalGuard OS AI Agent 조직도">
+      <div class="org-tier org-human-tier">
+        ${humanNode("Human RM Lead", "RM 최종 승인권자")}
+        ${humanNode("Human Compliance Lead", "준법 최종 승인권자")}
       </div>
-      <div class="org-level">
-        ${byLead
-          .filter(([, list]) => list.length)
-          .map(
-            ([lead, list]) => `
-              <section class="org-column">
-                <h4>${escapeHtml(lead)}</h4>
-                ${list
-                  .map(
-                    (agent) => `
-                      <article class="org-node">
-                        <div class="item-head">
-                          <strong>${escapeHtml(agent.name)}</strong>
-                          <span class="status-pill ${agent.status === "running" ? "status-running" : agent.status === "pending_approval" ? "status-pending" : "status-new"}">${escapeHtml(agent.status)}</span>
-                        </div>
-                        <p>${escapeHtml(agent.role)}</p>
-                        <div class="tag-row">${agent.skills.map((skill) => `<span class="tag">${escapeHtml(skill)}</span>`).join("")}</div>
-                        <p>reportsTo: ${escapeHtml(agent.reportsTo)} · budget ₩${agent.budget.toLocaleString()} · spent ₩${agent.spent.toLocaleString()}</p>
-                      </article>
-                    `,
-                  )
-                  .join("")}
-              </section>
-            `,
-          )
-          .join("")}
+      <div class="org-connector split-connector" aria-hidden="true"></div>
+      <div class="org-tier org-command-tier">
+        ${orgNode(agentById.orchestrator, "command")}
+        ${orgNode(agentById.compliance, "command")}
+      </div>
+      <div class="org-connector branch-connector" aria-hidden="true"></div>
+      <div class="org-branch-grid">
+        ${branches.map((branch) => orgBranch(branch, agentById)).join("")}
+      </div>
+      <div class="org-legend">
+        <span><i class="legend-dot running"></i>running</span>
+        <span><i class="legend-dot pending"></i>pending approval</span>
+        <span><i class="legend-dot idle"></i>idle</span>
       </div>
     </div>
+  `;
+}
+
+function humanNode(title, description) {
+  return `
+    <article class="org-node human">
+      <span class="node-kicker">Human Gate</span>
+      <strong>${escapeHtml(title)}</strong>
+      <p>${escapeHtml(description)}</p>
+    </article>
+  `;
+}
+
+function orgBranch(branch, agentById) {
+  return `
+    <section class="org-branch ${branch.featured ? "is-featured" : ""}">
+      <div class="branch-head">
+        <strong>${escapeHtml(branch.title)}</strong>
+        <p>${escapeHtml(branch.subtitle)}</p>
+      </div>
+      <div class="branch-agents">
+        ${branch.agents.map((id) => orgNode(agentById[id], id === "jeonse-lead" ? "line-lead" : "")).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function orgNode(agent, variant = "") {
+  if (!agent) return "";
+  const status = agent.status === "running" ? "status-running" : agent.status === "pending_approval" ? "status-pending" : "status-new";
+  return `
+    <article class="org-node ${variant}">
+      <div class="node-topline">
+        <span class="node-kicker">${escapeHtml(agent.type)}</span>
+        <span class="status-pill ${status}">${escapeHtml(agent.status)}</span>
+      </div>
+      <strong>${escapeHtml(agent.name)}</strong>
+      <p>${escapeHtml(agent.role)}</p>
+      <div class="node-meta">
+        <span>${escapeHtml(agent.heartbeat)}</span>
+        <span>queue ${agent.queue}</span>
+        <span>${agent.skills.length} skills</span>
+      </div>
+    </article>
   `;
 }
 
