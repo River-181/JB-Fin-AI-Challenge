@@ -11,6 +11,7 @@ required = [
     ROOT / "docs/01_research/pain-point-evidence.md",
     ROOT / "docs/02_product/prd.md",
     ROOT / "docs/02_product/function-spec.md",
+    ROOT / "docs/02_product/hagentos-ui-adaptation.md",
     ROOT / "docs/03_agents/agent-system.md",
     ROOT / "docs/03_agents/skill-registry.md",
     ROOT / "docs/04_submission/mvp-proposal-draft.md",
@@ -31,9 +32,12 @@ js = (ROOT / "app/app.js").read_text(encoding="utf-8")
 
 html_needles = [
     "JB LocalGuard OS",
-    "case-list",
-    "agent-board",
-    "skill-rack",
+    "org-rail",
+    "nav-list",
+    "command-input",
+    "case-board",
+    "live-runs",
+    "view-body",
     "evidence-feed",
     "audit-log",
     "./app.js",
@@ -46,11 +50,14 @@ js_needles = [
     "전주 중앙로 카페",
     "광주 송정 도소매",
     "군산 부품 제조업",
+    "익산 음식점",
+    "renderWorkbench",
+    "Skill Registry",
     "runAgents",
     "approveAction",
     "Fraud Shield Agent",
     "Approval Pending",
-    "Audit",
+    "audit",
 ]
 for needle in js_needles:
     if needle not in js:
@@ -61,6 +68,7 @@ doc_needles = [
     "Case -> AgentRun -> Approval -> Audit",
     "학원 운영자",
     "JB금융그룹-네이버클라우드",
+    "4-zone layout",
 ]
 joined_docs = "\n".join(
     path.read_text(encoding="utf-8")
