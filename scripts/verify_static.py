@@ -13,6 +13,7 @@ required = [
     ROOT / "docs/02_product/function-spec.md",
     ROOT / "docs/02_product/hagentos-ui-adaptation.md",
     ROOT / "docs/03_agents/agent-system.md",
+    ROOT / "docs/03_agents/jeonse-shield-agents.md",
     ROOT / "docs/03_agents/skill-registry.md",
     ROOT / "docs/04_submission/mvp-proposal-draft.md",
     ROOT / "docs/04_submission/evaluation-fit.md",
@@ -55,6 +56,11 @@ js_needles = [
     "익산 음식점",
     "renderWorkbench",
     "Skill Registry",
+    "Jeonse Shield Lead",
+    "Registry Rights Agent",
+    "orgChartView",
+    "jeonseView",
+    "jeonse-price-ratio",
     "runAgents",
     "approveAction",
     "Fraud Shield Agent",
@@ -71,6 +77,8 @@ doc_needles = [
     "학원 운영자",
     "JB금융그룹-네이버클라우드",
     "4-zone layout",
+    "Jeonse Shield",
+    "전세 위험 신호 탐지",
 ]
 joined_docs = "\n".join(
     path.read_text(encoding="utf-8")

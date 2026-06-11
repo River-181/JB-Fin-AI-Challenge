@@ -12,6 +12,7 @@ const navigation = [
       { id: "cases", icon: "C", label: "케이스 목록", countKey: "cases" },
       { id: "approvals", icon: "A", label: "승인 큐", countKey: "approvals" },
       { id: "runs", icon: "R", label: "AgentRun", countKey: "runs" },
+      { id: "jeonse", icon: "J", label: "전세 Shield", countKey: "jeonse" },
       { id: "goals", icon: "G", label: "운영 목표", countKey: "goals" },
     ],
   },
@@ -19,6 +20,7 @@ const navigation = [
     section: "Institution",
     items: [
       { id: "agents", icon: "T", label: "에이전트 팀", countKey: "agents" },
+      { id: "orgchart", icon: "O", label: "Agent 조직도", countKey: "orgchart" },
       { id: "skills", icon: "K", label: "Skill Registry", countKey: "skills" },
       { id: "routines", icon: "H", label: "Heartbeat", countKey: "routines" },
       { id: "activity", icon: "L", label: "처리 이력", countKey: "activity" },
@@ -83,6 +85,24 @@ const evidence = [
     implication:
       "고객 직접 자동화보다 RM 승인형 안내와 쉬운 콜백 스크립트가 적합하다.",
   },
+  {
+    id: "hug-safe-jeonse",
+    type: "Official",
+    title: "HUG 안심전세 서비스",
+    source: "주택도시보증공사",
+    url: "https://www.khug.or.kr/jeonse/web/s01/s010102.jsp",
+    implication:
+      "시세, 전세가율, 임대인 정보, 셀프테스트, 보증가입 가능성 확인을 전세 위험 판단 근거로 연결한다.",
+  },
+  {
+    id: "molit-jeonse-policy",
+    type: "Policy",
+    title: "전세사기 예방과 보증 기준 정책",
+    source: "국토교통부",
+    url: "https://www.molit.go.kr/USR/NEWS/m_71/dtl.jsp?id=95087856",
+    implication:
+      "전세가율, 권리관계, 특약, 보증보험 확인 항목을 고객 안내 체크리스트에 반영한다.",
+  },
 ];
 
 const skillRack = [
@@ -101,6 +121,16 @@ const skillRack = [
   ["approval-gate", "control", "외부 행동 전 사람 승인 요구", "mandatory", "high"],
   ["audit-ledger", "control", "근거, 판단, 행동, 승인 내역 기록", "mandatory", "low"],
   ["portfolio-signal", "analytics", "지점/계열사별 위험 클러스터 집계", "internal only", "low"],
+  ["jeonse-price-ratio", "jeonse-risk", "매매 추정가 대비 전세보증금 비율과 과다 전세가율 위험 산정", "RM review", "high"],
+  ["local-market-compare", "jeonse-risk", "주변 시세 대비 보증금 과다 여부 비교", "RM review", "medium"],
+  ["registry-rights-scan", "legal-risk", "근저당, 압류, 가압류, 신탁등기 등 권리관계 위험 추출", "human/legal review", "high"],
+  ["ownership-transfer-delta", "legal-risk", "단기간 소유권 이전, 매매가 급변, 임대인 변경 신호 탐지", "human/legal review", "high"],
+  ["guarantee-feasibility", "guarantee", "보증보험 가입 불가 가능성, 보증 한도, 선순위 채권 확인 필요성 분류", "RM review", "high"],
+  ["tenant-asset-exposure", "asset-risk", "총자산 대비 보증금 비중과 계약 실패 시 손실 위험도 산정", "advisor review", "medium"],
+  ["housing-cost-burden", "asset-risk", "월 소득 대비 주거비와 전세대출 상환 부담 분석", "advisor review", "medium"],
+  ["pre-contract-checklist", "contract", "계약 전 확인 서류, 임대인·중개사 확인 항목 생성", "approval required", "medium"],
+  ["special-clause-drafter", "contract", "근저당 말소, 보증보험, 잔금 조건 관련 특약 문구 초안 제안", "legal review", "high"],
+  ["bank-linkage-brief", "banking", "전세대출 상담, 보증보험 안내, 위험 매물 경고, 안전 계약 가이드 연결", "RM approval", "medium"],
 ].map(([slug, type, purpose, approval, risk]) => ({
   slug,
   type,
@@ -222,6 +252,90 @@ const agents = [
     currentCase: "portfolio dashboard",
     skills: ["portfolio-signal", "trend-summary", "case-metrics"],
     role: "지점별 case cluster, queue health, 예산 흐름 집계",
+  },
+  {
+    id: "jeonse-lead",
+    name: "Jeonse Shield Lead",
+    type: "housing-risk",
+    status: "running",
+    reportsTo: "LocalGuard Orchestrator",
+    budget: 160000,
+    spent: 39000,
+    heartbeat: "35s",
+    queue: 3,
+    currentCase: "서울 신축빌라 전세 예정",
+    skills: ["case-os-core", "jeonse-price-ratio", "approval-gate", "audit-ledger"],
+    role: "전세사기 위험 case를 생성하고 가격, 권리, 자산, 계약, 은행 연계 Agent를 배정",
+  },
+  {
+    id: "deposit-ratio",
+    name: "Deposit Ratio Agent",
+    type: "housing-risk",
+    status: "running",
+    reportsTo: "Jeonse Shield Lead",
+    budget: 85000,
+    spent: 21000,
+    heartbeat: "54s",
+    queue: 2,
+    currentCase: "전세가율 과다 판단",
+    skills: ["jeonse-price-ratio", "local-market-compare"],
+    role: "전세가율 과다, 주변 시세 대비 보증금 과다, 매매가 추정 불확실성 판단",
+  },
+  {
+    id: "registry-rights",
+    name: "Registry Rights Agent",
+    type: "legal-risk",
+    status: "pending_approval",
+    reportsTo: "Jeonse Shield Lead",
+    budget: 105000,
+    spent: 33000,
+    heartbeat: "1m",
+    queue: 2,
+    currentCase: "등기부 권리관계 확인",
+    skills: ["registry-rights-scan", "ownership-transfer-delta"],
+    role: "근저당, 압류, 신탁등기, 단기 소유권 이전 등 권리관계 위험을 분류",
+  },
+  {
+    id: "tenant-asset",
+    name: "Tenant Asset Risk Agent",
+    type: "asset-risk",
+    status: "idle",
+    reportsTo: "Jeonse Shield Lead",
+    budget: 75000,
+    spent: 16000,
+    heartbeat: "5m",
+    queue: 1,
+    currentCase: "고객 자산 노출 분석",
+    skills: ["tenant-asset-exposure", "housing-cost-burden"],
+    role: "총자산 대비 보증금, 월 소득 대비 주거비, 전세대출 상환 가능성, 손실 위험도를 산정",
+  },
+  {
+    id: "contract-check",
+    name: "Contract Checklist Agent",
+    type: "contract",
+    status: "idle",
+    reportsTo: "Compliance Guard Agent",
+    budget: 78000,
+    spent: 19000,
+    heartbeat: "4m",
+    queue: 2,
+    currentCase: "계약 전 체크리스트",
+    skills: ["pre-contract-checklist", "special-clause-drafter", "compliance-guard"],
+    role: "확인 서류, 임대인·중개사 확인, 특약 문구, 보증보험 전 확인사항을 초안화",
+  },
+  {
+    id: "bank-linkage",
+    name: "Bank Linkage Agent",
+    type: "banking",
+    status: "idle",
+    reportsTo: "Human RM Lead",
+    budget: 68000,
+    spent: 12000,
+    heartbeat: "7m",
+    queue: 1,
+    currentCase: "전세대출 상담 연결",
+    skills: ["bank-linkage-brief", "guarantee-feasibility", "notification-brief"],
+    role: "전세대출 상담, 보증보험 안내, 위험 매물 경고, 안전 계약 가이드로 은행 접점을 연결",
   },
 ];
 
@@ -372,12 +486,55 @@ const initialCases = [
     ],
     audit: [["13:08", "Case assigned to Pain Radar Agent."]],
   },
+  {
+    id: "seoul-jeonse-villa",
+    code: "JBG-201",
+    customerName: "서울 신축빌라 전세 예정",
+    affiliate: "전북은행",
+    segment: "청년 전세대출 고객",
+    region: "서울 강서구",
+    industry: "주거 · 전세계약",
+    riskScore: 91,
+    status: "Approval Pending",
+    priority: "critical",
+    zeroHuman: "L3 분석 + 사람 결정",
+    sla: "오늘 18:00",
+    owner: "Jeonse Shield Lead",
+    stage: "pending_approval",
+    due: "오늘 18:00",
+    exposure: "전세보증금 2.35억 · 총자산 대비 78%",
+    primaryPain: "전세가율 과다 + 권리관계 확인 필요",
+    nextAction: "위험 매물 경고, 보증보험 확인, 전세대출 상담 연결",
+    approvalTitle: "전세사기 위험 진단 리포트 + 안전 계약 체크리스트",
+    pains: ["jeonse-fraud", "price-ratio", "registry-risk", "guarantee-feasibility"],
+    rootCauses: ["전세가율 과다", "주변 시세 대비 보증금 높음", "근저당 확인 필요", "보증보험 가입 가능성 확인"],
+    evidenceIds: ["hug-safe-jeonse", "molit-jeonse-policy", "jb-network"],
+    gates: [
+      ["법률 판단 확정 표현 금지", "pending"],
+      ["등기부/보증보험 원문 확인 필요", "pending"],
+      ["은행 상담 연결 전 고객 동의", "passed"],
+      ["특약 문구는 초안으로만 제공", "passed"],
+    ],
+    agents: ["jeonse-lead", "deposit-ratio", "registry-rights", "tenant-asset", "contract-check", "bank-linkage", "compliance"],
+    transcript: [
+      "Deposit Ratio: 전세보증금이 주변 시세 대비 높아 전세가율 과다 후보입니다.",
+      "Registry Rights: 등기부 원문에서 근저당, 신탁등기, 소유권 이전 이력 확인이 필요합니다.",
+      "Tenant Asset Risk: 보증금이 고객 총자산의 대부분을 차지해 손실 민감도가 높습니다.",
+      "Bank Linkage: 전세대출 상담과 보증보험 가능성 확인 안내를 승인 대기로 올렸습니다.",
+    ],
+    audit: [
+      ["14:02", "Jeonse Shield case opened from pre-contract customer 상담."],
+      ["14:04", "Deposit Ratio and Registry Rights Agents assigned."],
+      ["14:08", "Approval request created for safe-contract guide and bank 상담 연결."],
+    ],
+  },
 ];
 
 const routines = [
   ["평일 08:30", "지역 소상공인 pain radar scan", "Pain Radar Agent", "enabled"],
   ["매일 10:00", "승인 대기 case SLA 점검", "LocalGuard Orchestrator", "enabled"],
   ["매일 14:00", "보이스피싱 경보 동기화", "Fraud Shield Agent", "enabled"],
+  ["매일 15:00", "전세 위험 매물/상담 case 점검", "Jeonse Shield Lead", "enabled"],
   ["금요일 17:00", "지점별 case cluster 리포트", "Analytics Agent", "paused"],
 ];
 
@@ -386,12 +543,15 @@ const goals = [
   ["Evidence traceability", "Agent 판단 100%에 근거 링크 또는 내부 이벤트 연결", 91],
   ["Approval safety", "고객-facing 행동 100% 승인 게이트 통과", 100],
   ["Fraud block", "고위험 사기 case 외부 발송 차단", 100],
+  ["Jeonse safe-contract", "전세 위험 case 100%에 권리관계/보증보험/은행 연계 체크리스트 연결", 86],
 ];
 
 let cases = JSON.parse(JSON.stringify(initialCases));
 let selectedCaseId = "jeonju-cafe";
 let activeView = "dashboard";
 let activity = [
+  ["14:08", "Jeonse Shield Lead", "created approval", "JBG-201"],
+  ["14:04", "Registry Rights Agent", "requested source document", "JBG-201"],
   ["13:12", "Cashflow Triage Agent", "created approval", "JBG-104"],
   ["13:08", "Pain Radar Agent", "checked out", "JBG-133"],
   ["11:23", "Fraud Shield Agent", "blocked outbound action", "JBG-127"],
@@ -435,7 +595,9 @@ function counts() {
     cases: cases.length,
     approvals: cases.filter((item) => item.status === "Approval Pending").length,
     runs: cases.filter((item) => item.status === "Agent Running").length,
+    jeonse: cases.filter((item) => item.pains.includes("jeonse-fraud")).length,
     agents: agents.length,
+    orgchart: agents.length,
     skills: skillRack.length,
     routines: routines.filter((item) => item[3] === "enabled").length,
     goals: goals.length,
@@ -584,7 +746,9 @@ function renderWorkbench() {
     ["cases", "Cases"],
     ["approvals", "Approvals"],
     ["runs", "Runs"],
+    ["jeonse", "Jeonse Shield"],
     ["agents", "Agents"],
+    ["orgchart", "Org Chart"],
     ["skills", "Skills"],
     ["routines", "Routines"],
     ["goals", "Goals"],
@@ -604,7 +768,9 @@ function renderWorkbench() {
   if (activeView === "cases") body = casesView();
   if (activeView === "approvals") body = approvalsView();
   if (activeView === "runs") body = runsView();
+  if (activeView === "jeonse") body = jeonseView();
   if (activeView === "agents") body = agentsView();
+  if (activeView === "orgchart") body = orgChartView();
   if (activeView === "skills") body = skillsView();
   if (activeView === "routines") body = routinesView();
   if (activeView === "goals") body = goalsView();
@@ -629,6 +795,7 @@ function dashboardView() {
       ${workItem("4개 지표 카드", "High Risk, Approval, Live Run, API Budget을 요약한다.", "운영 현황")}
       ${workItem("최근 활동", "Agent checked out, approval created, status changed를 감사 로그처럼 표시한다.", "Activity")}
       ${workItem("최근 케이스", "지역 금융 위험 case를 TODO/RUNNING/APPROVAL/BLOCKED로 구분한다.", "Kanban")}
+      ${workItem("전세 Shield", "전세가율, 권리관계, 고객 자산노출, 보증보험, 은행 상담 연결을 전용 Agent 라인으로 처리한다.", "Jeonse")}
       ${workItem("오늘 후속조치", "SLA 만료 전 담당 RM 승인 또는 escalation을 유도한다.", "Follow-up")}
     </div>
   `;
@@ -670,6 +837,61 @@ function runsView() {
   `;
 }
 
+function jeonseView() {
+  const jeonseCase = cases.find((item) => item.pains.includes("jeonse-fraud"));
+  const features = [
+    [
+      "전세 위험 신호 탐지",
+      "전세가율 과다, 주변 시세 대비 보증금 과다, 근저당·압류·신탁등기, 단기 소유권 이전, 보증보험 가입 불가 가능성을 묶어 위험 점수를 만든다.",
+      ["jeonse-price-ratio", "local-market-compare", "registry-rights-scan", "ownership-transfer-delta", "guarantee-feasibility"],
+    ],
+    [
+      "고객 맞춤형 자산 리스크 분석",
+      "고객 총자산 대비 전세보증금 비중, 월 소득 대비 주거비 부담, 전세대출 상환 가능성, 계약 실패 시 손실 민감도를 분석한다.",
+      ["tenant-asset-exposure", "housing-cost-burden"],
+    ],
+    [
+      "AI 계약 전 체크리스트",
+      "계약 전 확인 서류, 임대인 확인 항목, 중개사 확인 항목, 특약 문구 초안, 보증보험 가입 전 확인사항을 승인 대기 카드로 만든다.",
+      ["pre-contract-checklist", "special-clause-drafter", "compliance-guard"],
+    ],
+    [
+      "은행 서비스 연계",
+      "전세대출 상담 연결, 보증보험 안내, 위험 매물 경고, 안전 계약 가이드를 RM 승인 후 고객에게 안내한다.",
+      ["bank-linkage-brief", "notification-brief", "approval-gate"],
+    ],
+  ];
+
+  return `
+    <div class="jeonse-summary">
+      <article class="work-item featured">
+        <div class="item-head">
+          <strong>${escapeHtml(jeonseCase.code)} · ${escapeHtml(jeonseCase.customerName)}</strong>
+          <span class="status-pill ${statusClass(jeonseCase.status)}">${escapeHtml(jeonseCase.status)}</span>
+        </div>
+        <p>${escapeHtml(jeonseCase.primaryPain)} · ${escapeHtml(jeonseCase.exposure)}</p>
+        <div class="tag-row">${jeonseCase.rootCauses.map((cause) => `<span class="tag">${escapeHtml(cause)}</span>`).join("")}</div>
+      </article>
+      <div class="feature-grid">
+        ${features
+          .map(
+            ([title, description, skills]) => `
+              <article class="work-item">
+                <div class="item-head">
+                  <strong>${escapeHtml(title)}</strong>
+                  <span class="source-badge">AI Agent Skill</span>
+                </div>
+                <p>${escapeHtml(description)}</p>
+                <div class="tag-row">${skills.map((skill) => `<span class="tag">${escapeHtml(skill)}</span>`).join("")}</div>
+              </article>
+            `,
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
+}
+
 function agentsView() {
   return `
     <div class="agent-grid">
@@ -688,6 +910,54 @@ function agentsView() {
           `,
         )
         .join("")}
+    </div>
+  `;
+}
+
+function orgChartView() {
+  const humanLeads = ["Human RM Lead", "Human Compliance Lead"];
+  const childAgents = (leader) => agents.filter((agent) => agent.reportsTo === leader || agent.reportsTo === `${leader} Agent`);
+  const rootChildren = agents.filter((agent) => agent.reportsTo === "Human RM Lead" || agent.reportsTo === "Human Compliance Lead");
+  const byLead = [
+    ["Human RM Lead", rootChildren.filter((agent) => agent.reportsTo === "Human RM Lead")],
+    ["Human Compliance Lead", rootChildren.filter((agent) => agent.reportsTo === "Human Compliance Lead")],
+    ["LocalGuard Orchestrator", childAgents("LocalGuard Orchestrator")],
+    ["Jeonse Shield Lead", childAgents("Jeonse Shield Lead")],
+    ["Compliance Guard Agent", childAgents("Compliance Guard")],
+  ];
+
+  return `
+    <div class="org-chart">
+      <div class="org-root">
+        ${humanLeads.map((lead) => `<div class="org-node human"><strong>${escapeHtml(lead)}</strong><span>최종 승인권자</span></div>`).join("")}
+      </div>
+      <div class="org-level">
+        ${byLead
+          .filter(([, list]) => list.length)
+          .map(
+            ([lead, list]) => `
+              <section class="org-column">
+                <h4>${escapeHtml(lead)}</h4>
+                ${list
+                  .map(
+                    (agent) => `
+                      <article class="org-node">
+                        <div class="item-head">
+                          <strong>${escapeHtml(agent.name)}</strong>
+                          <span class="status-pill ${agent.status === "running" ? "status-running" : agent.status === "pending_approval" ? "status-pending" : "status-new"}">${escapeHtml(agent.status)}</span>
+                        </div>
+                        <p>${escapeHtml(agent.role)}</p>
+                        <div class="tag-row">${agent.skills.map((skill) => `<span class="tag">${escapeHtml(skill)}</span>`).join("")}</div>
+                        <p>reportsTo: ${escapeHtml(agent.reportsTo)} · budget ₩${agent.budget.toLocaleString()} · spent ₩${agent.spent.toLocaleString()}</p>
+                      </article>
+                    `,
+                  )
+                  .join("")}
+              </section>
+            `,
+          )
+          .join("")}
+      </div>
     </div>
   `;
 }

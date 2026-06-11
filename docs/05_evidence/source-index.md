@@ -17,10 +17,13 @@
 - 연합뉴스 자영업자 금리 부담: https://www.yna.co.kr/view/AKR20260328043600002
 - 금융위원회 보이스피싱 AI 플랫폼: https://www.fsc.go.kr/no010101/86063
 - 브라보마이라이프 디지털 금융 역량: https://bravo.etoday.co.kr/view/atc_view/19103
+- HUG 안심전세 App: https://www.khug.or.kr/jeonse/web/s01/s010102.jsp
+- HUG 안심전세포털: https://www.khug.or.kr/jeonse/index_jeonse.jsp
+- 국토교통부 안심전세 App 보도자료: https://www.molit.go.kr/USR/NEWS/m_71/dtl.jsp?id=95087856
+- 범정부 전세사기 예방 및 피해 지원방안: https://www.korea.kr/briefing/pressReleaseView.do?newsId=156550481
 
 ## Reference System Source
 
 - Reference repository: https://github.com/River-181/KEG-Mangsanggwedo
 - Transferred pattern: case operation, agent run, skill injection, approval gate, audit ledger, zero-human level
 - Explicitly excluded: academy operator domain, education workflow, student or parent operations
-

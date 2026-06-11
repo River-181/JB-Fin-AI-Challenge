@@ -16,6 +16,8 @@ This update expands JB LocalGuard OS from a simple 3-column MVP into a HagentOS-
 - Activity ledger: audit-style timeline
 - Budget page: per-Agent budget consumption
 - Settings: organization profile, approval policy, integration adapters
+- Jeonse Shield page: jeonse-fraud risk signals, tenant asset exposure, pre-contract checklist, and bank service linkage
+- Agent org chart page: shows each AI Agent's reporting line, responsibility, status, budget, and mounted skills
 
 ## Finance Adaptation
 
@@ -52,5 +54,18 @@ The palette follows the attached JB Challenge banner:
 - hero minimum height: 220px
 - command panel: 280px label column plus flexible command input
 - operations grid: flexible board plus 320px live-run panel
+
+## Added Jeonse Shield Line
+
+The app now includes a separate jeonse-fraud prevention agent line:
+
+- Jeonse Shield Lead
+- Deposit Ratio Agent
+- Registry Rights Agent
+- Tenant Asset Risk Agent
+- Contract Checklist Agent
+- Bank Linkage Agent
+
+These agents cover high jeonse ratio, excessive deposit versus nearby market, registry rights risk, short-term ownership transfer, guarantee feasibility, tenant asset exposure, pre-contract checklist, special clause drafts, jeonse-loan 상담, guarantee 안내, risky listing warning, and safe-contract guidance.
 
 The UI avoids the academy domain and presents a finance operating system suitable for the free-topic JB future business AI track.

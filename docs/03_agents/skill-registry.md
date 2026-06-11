@@ -26,6 +26,16 @@ Skill packages are domain capabilities mounted onto Agents. This follows the ref
 | `portfolio-signal` | analytics | Aggregate branch or affiliate level pain clusters | internal only |
 | `trend-summary` | analytics | Summarize changing risk themes | internal only |
 | `case-metrics` | analytics | Track queue age, approval status, recurring pain | internal only |
+| `jeonse-price-ratio` | jeonse-risk | Estimate high jeonse-ratio risk against likely market value | RM review |
+| `local-market-compare` | jeonse-risk | Compare deposit against nearby market references | RM review |
+| `registry-rights-scan` | legal-risk | Detect mortgage, seizure, provisional seizure, trust registration, and other registry risk signals | human/legal review |
+| `ownership-transfer-delta` | legal-risk | Detect short-term ownership transfer and abnormal ownership history | human/legal review |
+| `guarantee-feasibility` | guarantee | Classify likely guarantee-insurance feasibility questions and required checks | RM review |
+| `tenant-asset-exposure` | asset-risk | Estimate deposit exposure versus customer assets and loss sensitivity | advisor review |
+| `housing-cost-burden` | asset-risk | Analyze housing cost and jeonse-loan repayment burden versus monthly income | advisor review |
+| `pre-contract-checklist` | contract | Draft document, landlord, broker, and guarantee pre-checklist | approval required |
+| `special-clause-drafter` | contract | Draft special clause wording for human/legal review | legal review |
+| `bank-linkage-brief` | banking | Connect jeonse-loan counseling, guarantee guidance, warning, and safe-contract guide | RM approval |
 
 ## Skill Contract
 
@@ -55,4 +65,3 @@ Skill packages are domain capabilities mounted onto Agents. This follows the ref
 3. Agents run only with mounted skills.
 4. Every skill output must include `evidence`, `confidence`, `proposedAction`, and `approvalPolicy`.
 5. Approval Gate blocks actions whose policy is not satisfied.
-
