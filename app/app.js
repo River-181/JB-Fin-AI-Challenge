@@ -929,6 +929,29 @@ function bindPageActions() {
       render();
     });
   });
+  document.querySelectorAll("[data-approve-case]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedCaseId = button.dataset.approveCase;
+      activeDetailType = "case";
+      approveCase(currentCase());
+    });
+  });
+  document.querySelectorAll("[data-reject-case]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedCaseId = button.dataset.rejectCase;
+      activeDetailType = "case";
+      rejectCase(currentCase());
+    });
+  });
+  document.querySelectorAll("[data-routine-toggle]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const routine = routines[Number(button.dataset.routineToggle)];
+      if (!routine) return;
+      routine[3] = routine[3] === "enabled" ? "paused" : "enabled";
+      activity.unshift([timestamp(), routine[2], routine[3] === "enabled" ? "resumed routine" : "paused routine", routine[1]]);
+      render();
+    });
+  });
 }
 
 function heroMarkup() {
@@ -1117,11 +1140,22 @@ function dashboardView() {
 }
 
 function inboxView() {
+  const targets = visibleCases().filter((item) => item.status === "Escalated" || item.status === "Approval Pending");
+  if (!targets.length) return '<div class="empty-state">처리 필요 알림 없음</div>';
   return `
     <div class="work-grid">
-      ${cases
-        .filter((item) => item.status === "Escalated" || item.status === "Approval Pending")
-        .map((item) => workItem(`${item.code} · ${item.customerName}`, item.nextAction, item.status))
+      ${targets
+        .map(
+          (item) => `
+            <button class="work-item link-card ${item.id === selectedCaseId && activeDetailType === "case" ? "is-selected" : ""}" type="button" data-case-id="${escapeHtml(item.id)}">
+              <div class="item-head">
+                <strong>${escapeHtml(item.code)} · ${escapeHtml(item.customerName)}</strong>
+                <span class="status-pill ${statusClass(item.status)}">${escapeHtml(item.status)}</span>
+              </div>
+              <p>${escapeHtml(item.nextAction)}</p>
+            </button>
+          `,
+        )
         .join("")}
     </div>
   `;
@@ -1136,10 +1170,36 @@ function casesView() {
 }
 
 function approvalsView() {
-  const approvals = cases.filter((item) => item.status === "Approval Pending");
-  return approvals.length
-    ? `<div class="two-col">${approvals.map((item) => workItem(item.approvalTitle, `${item.code} · ${item.customerName} · ${item.nextAction}`, item.zeroHuman)).join("")}</div>`
-    : '<div class="empty-state">승인 대기 항목 없음</div>';
+  const approvals = visibleCases().filter((item) => item.status === "Approval Pending");
+  if (!approvals.length) return '<div class="empty-state">승인 대기 항목 없음</div>';
+  return `
+    <div class="two-col">
+      ${approvals
+        .map(
+          (item) => `
+            <article class="work-item approval-item ${item.id === selectedCaseId && activeDetailType === "case" ? "is-selected" : ""}">
+              <div class="item-head">
+                <strong>${escapeHtml(item.approvalTitle)}</strong>
+                <span class="status-pill status-pending">${escapeHtml(item.zeroHuman)}</span>
+              </div>
+              <p>${escapeHtml(item.code)} · ${escapeHtml(item.customerName)} · ${escapeHtml(item.nextAction)}</p>
+              <div class="action-row approval-actions">
+                <button class="secondary-button" type="button" data-approve-case="${escapeHtml(item.id)}">
+                  <span aria-hidden="true">✓</span>
+                  Approve
+                </button>
+                <button class="danger-button" type="button" data-reject-case="${escapeHtml(item.id)}">
+                  <span aria-hidden="true">×</span>
+                  Reject
+                </button>
+                <button class="ghost-button" type="button" data-case-id="${escapeHtml(item.id)}">상세 보기</button>
+              </div>
+            </article>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
 }
 
 function runStatusLabel(status) {
@@ -1363,7 +1423,26 @@ function skillsView() {
 }
 
 function routinesView() {
-  return `<div class="work-grid">${routines.map((item) => workItem(item[1], `${item[0]} · ${item[2]}`, item[3])).join("")}</div>`;
+  return `
+    <div class="work-grid">
+      ${routines
+        .map(
+          (routine, index) => `
+            <article class="work-item">
+              <div class="item-head">
+                <strong>${escapeHtml(routine[1])}</strong>
+                <span class="status-pill ${routine[3] === "enabled" ? "status-approved" : "status-new"}">${escapeHtml(routine[3])}</span>
+              </div>
+              <p>${escapeHtml(routine[0])} · ${escapeHtml(routine[2])}</p>
+              <div class="action-row action-stack">
+                <button class="ghost-button" type="button" data-routine-toggle="${index}">${routine[3] === "enabled" ? "일시정지" : "재개"}</button>
+              </div>
+            </article>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
 }
 
 function goalsView() {
@@ -1982,9 +2061,8 @@ function closeRunsForCase(item, status, logText) {
     });
 }
 
-function approveAction() {
-  const item = currentCase();
-  if (item.status !== "Approval Pending") return;
+function approveCase(item) {
+  if (!item || item.status !== "Approval Pending") return;
   item.status = "Approved";
   item.stage = "done";
   item.audit.push([timestamp(), "Human RM approved the proposed action. Demo outbound task recorded."]);
@@ -1993,15 +2071,22 @@ function approveAction() {
   render();
 }
 
-function rejectAction() {
-  const item = currentCase();
-  if (item.status !== "Approval Pending") return;
+function rejectCase(item) {
+  if (!item || item.status !== "Approval Pending") return;
   item.status = "Rejected";
   item.stage = "blocked";
   item.audit.push([timestamp(), "Human reviewer rejected the draft and requested revision."]);
   activity.unshift([timestamp(), "Human reviewer", "rejected draft", item.code]);
   closeRunsForCase(item, "rejected", "Human reviewer rejected the draft. Run closed.");
   render();
+}
+
+function approveAction() {
+  approveCase(currentCase());
+}
+
+function rejectAction() {
+  rejectCase(currentCase());
 }
 
 function dispatchCommand() {
