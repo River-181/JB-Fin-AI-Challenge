@@ -23,10 +23,35 @@ test("home and dashboard render without console errors", async ({ page }) => {
   await expect(page.getByText("오늘 우선 처리 기준")).toBeVisible();
   await expect(page.getByText("운영 비용 해석")).toBeVisible();
   await expect(page.getByText("지역별 위험도")).toBeVisible();
+  await expect(page.getByText("완료된 사용자 가치")).toBeVisible();
+  await expect(page.getByText("데이터 출처와 저장 상태")).toBeVisible();
+  await expect(page.getByText("이번 세션에서 아직 저장 없음")).toBeVisible();
 
   await saveShot(page, "home.png");
   await saveShot(page, "dashboard.png");
   expect(errors).toEqual([]);
+});
+
+test("core routes render reachable grouped screens", async ({ page }) => {
+  const routes = [
+    "dashboard",
+    "inbox",
+    "cases",
+    "approvals",
+    "runs",
+    "jeonse",
+    "agents",
+    "orgchart",
+    "skills",
+    "budget",
+    "settings",
+  ];
+
+  for (const route of routes) {
+    await page.goto(`/index.html#${route}`);
+    await expect(page.locator("#page-content")).not.toBeEmpty();
+    await expect(page.locator(".org-rail")).toBeVisible();
+  }
 });
 
 test("scenario flow runs a selected case and reaches approval state", async ({ page }) => {
@@ -92,6 +117,37 @@ test("jeonse diagnosis produces result, save, and follow-up actions", async ({ p
   await expect(page.getByRole("status")).toContainText("은행 상담 연결 요청과 보증보험 확인 태스크를 생성했습니다.");
 });
 
+test("saved jeonse diagnosis updates dashboard service cycle", async ({ page }) => {
+  await page.goto("/index.html#jeonse");
+  await page.locator('input[name="deposit"]').fill("210000000");
+  await page.locator('input[name="market"]').fill("240000000");
+  await page.locator('input[name="assets"]').fill("260000000");
+  await page.locator('input[name="income"]').fill("3200000");
+  await page.locator('select[name="rights"]').selectOption("근저당 있음");
+  await page.locator("#jeonse-diagnosis-form").getByRole("button", { name: "진단 실행" }).click();
+
+  await page.locator("#save-case-result").click();
+  await page.locator("#create-follow-up").click();
+  await page.goto("/index.html#dashboard");
+
+  await expect(page.getByText("완성형 사이클은 1건입니다.")).toBeVisible();
+  await expect(page.getByText("저장된 분석 결과")).toBeVisible();
+  await expect(page.getByText("최근 저장 시각")).toBeVisible();
+  await saveShot(page, "data-dashboard.png");
+});
+
+test("empty command shows an actionable error and properties panel toggles", async ({ page }) => {
+  await page.goto("/index.html");
+  await page.locator("#command-input").fill("");
+  await page.locator("#dispatch-command").click();
+  await expect(page.getByRole("status")).toContainText("운영 지시를 입력해주세요.");
+
+  await page.locator("#properties-toggle").click();
+  await expect(page.locator(".app-shell")).toHaveClass(/properties-collapsed/);
+  await page.locator("#properties-toggle").click();
+  await expect(page.locator(".app-shell")).not.toHaveClass(/properties-collapsed/);
+});
+
 test("case search empty state works", async ({ page }) => {
   await page.goto("/index.html#cases");
   await page.locator("#case-search").fill("존재하지않는검색어");
@@ -105,4 +161,21 @@ test("mobile viewport keeps core navigation usable", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "대시보드" })).toBeVisible();
   await expect(page.locator("#page-content")).not.toBeEmpty();
   await saveShot(page, "mobile-view.png");
+});
+
+test("tablet viewport keeps dashboard interpretation panels readable", async ({ page }) => {
+  await page.setViewportSize({ width: 820, height: 1180 });
+  await page.goto("/index.html");
+  await expect(page.getByText("데이터 출처와 저장 상태")).toBeVisible();
+  await expect(page.getByText("완료된 사용자 가치")).toBeVisible();
+  await saveShot(page, "tablet-view.png");
+});
+
+test("settings can reset local demo state", async ({ page }) => {
+  await page.goto("/index.html#settings");
+  await expect(page.getByRole("button", { name: "데모 상태 초기화" })).toBeVisible();
+  await page.locator("#reset-demo-state").click();
+  await expect(page.getByRole("status")).toContainText("데모 상태를 초기화합니다.");
+  await page.waitForLoadState("domcontentloaded");
+  await expect(page.locator("#page-content")).not.toBeEmpty();
 });

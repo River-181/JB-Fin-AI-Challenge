@@ -95,13 +95,19 @@ js_needles = [
     "audit",
     "buildDashboardData",
     "dashboardCostView",
+    "scenarioCompletionView",
+    "dataStatusView",
+    "lastSavedAt",
     "jeonse-diagnosis-form",
     "analysisResultMarkup",
     "saveCaseResult",
     "createFollowUpTask",
+    "resetDemoState",
+    "운영 지시를 입력해주세요",
     "renderModal",
     "toast-root",
     "사용자 입력 데이터",
+    "저장된 분석 결과",
 ]
 for needle in js_needles:
     if needle not in js:

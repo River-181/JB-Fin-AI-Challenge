@@ -698,6 +698,7 @@ let modalError = "";
 let toastMessage = "";
 let toastTimer = null;
 let scenarioResults = [];
+let lastSavedAt = null;
 let agentRuns = [
   {
     id: "run-001",
@@ -1486,6 +1487,8 @@ function bindPageActions() {
       runJeonseDiagnosis(jeonseForm);
     });
   }
+  const resetDemoButton = document.getElementById("reset-demo-state");
+  if (resetDemoButton) resetDemoButton.addEventListener("click", resetDemoState);
   bindDragTargets();
 }
 
@@ -1558,7 +1561,9 @@ function dashboardPage() {
     ${panelMarkup("의사결정 요약", "오늘 우선 처리 기준", dashboardDecisionView(), "decision-panel")}
     <section class="dashboard-grid">
       ${panelMarkup("실시간 실행", "실시간 실행", '<div id="live-runs" class="live-runs"></div><span id="live-count" class="count-pill ghost-count">0</span>', "live-panel")}
+      ${panelMarkup("서비스 사이클", "완료된 사용자 가치", scenarioCompletionView(), "scenario-panel")}
       ${panelMarkup("처리 흐름", "처리 흐름 상태", dashboardView(), "process-panel")}
+      ${panelMarkup("데이터 상태", "데이터 출처와 저장 상태", dataStatusView(), "data-panel")}
       ${panelMarkup("비용과 효과", "운영 비용 해석", dashboardCostView(), "cost-panel")}
       ${panelMarkup("추세", "월별 비용 추이", dashboardTrendView(), "trend-panel")}
       ${panelMarkup("지역 비교", "지역별 위험도", dashboardRegionView(), "region-panel")}
@@ -1737,8 +1742,62 @@ function dashboardDecisionView() {
       <article>
         <span class="decision-icon">${iconSvg("database")}</span>
         <strong>데이터 기준</strong>
-        <p>현재 화면은 데모 데이터와 사용자 입력 데이터를 구분해 표시하며, 저장된 분석 결과는 브라우저 로컬 저장소에 남깁니다.</p>
+        <p>현재 화면은 데모 데이터 ${data.demoData.length}건과 사용자 입력 데이터 ${data.userInput.length}건을 구분하며, 저장 결과는 로컬 저장소에 남깁니다.</p>
       </article>
+    </div>
+  `;
+}
+
+function scenarioCompletionView() {
+  const data = buildDashboardData();
+  const completeCases = data.scoped.filter((item) => item.analysisResult && item.resultSaved && item.nextTaskCreated);
+  const latest = scenarioResults.slice(0, 3);
+  return `
+    <div class="scenario-cycle">
+      <div class="cycle-kpis">
+        ${costKpi("분석 생성", `${data.scoped.filter((item) => item.analysisResult).length}건`, "판단 결과가 만들어진 케이스")}
+        ${costKpi("결과 저장", `${data.savedResults.length}건`, "사용자 가치가 기록된 케이스")}
+        ${costKpi("후속 작업", `${data.followUps.length}건`, "다음 행동까지 이어진 케이스")}
+      </div>
+      <p class="insight-copy">완료 기준은 분석 결과 생성, 결과 저장, 후속 작업 생성 3단계입니다. 현재 완성형 사이클은 ${completeCases.length}건입니다.</p>
+      <div class="scenario-result-list">
+        ${
+          latest.length
+            ? latest.map((entry) => `
+                <article>
+                  <strong>${escapeHtml(entry.caseCode)} · ${escapeHtml(entry.title)}</strong>
+                  <span>${escapeHtml(entry.time)}</span>
+                  <p>${escapeHtml(entry.value)}</p>
+                </article>
+              `).join("")
+            : '<div class="empty-state">저장된 시나리오 결과 없음. 전세 진단 또는 케이스 실행 후 결과 저장을 누르세요.</div>'
+        }
+      </div>
+    </div>
+  `;
+}
+
+function dataStatusView() {
+  const data = buildDashboardData();
+  const sources = [
+    ["데모 데이터", data.demoData.length, "제안서 시연용 기본 케이스"],
+    ["사용자 입력 데이터", data.userInput.length, "등록 폼으로 생성된 케이스"],
+    ["저장된 분석 결과", data.savedResults.length, "결과 저장 버튼으로 기록된 케이스"],
+  ];
+  return `
+    <div class="data-status">
+      <div class="data-source-grid">
+        ${sources
+          .map(([label, count, detail]) => `
+            <article title="${escapeHtml(detail)}">
+              <strong>${count}건</strong>
+              <span>${escapeHtml(label)}</span>
+              <p>${escapeHtml(detail)}</p>
+            </article>
+          `)
+          .join("")}
+      </div>
+      <p class="insight-copy">최근 저장 시각: ${escapeHtml(lastSavedAt || "이번 세션에서 아직 저장 없음")} · 실제 API 연동 전까지는 데이터 출처를 화면에서 계속 구분합니다.</p>
     </div>
   `;
 }
@@ -2379,6 +2438,17 @@ function settingsView() {
       ${workItem("조직 프로필", "전북은행 · 광주은행 · JB우리캐피탈 데모 조직을 전환합니다.", "로컬 신뢰")}
       ${workItem("승인 정책", "L0-L4 자동화 레벨과 금지 자동 실행 항목을 관리합니다.", "필수 통제")}
       ${workItem("외부 연동", "뉴스, 공식자료, RM 상담 기록, 보안 경보 어댑터를 연결합니다.", "데모 연동")}
+      <article class="work-item settings-action-card">
+        <div class="item-head">
+          <strong>데모 상태 초기화</strong>
+          <span class="source-badge">로컬 저장소</span>
+        </div>
+        <p>브라우저에 저장된 사용자 입력, 실행 결과, 후속 작업 기록을 지우고 기본 데모 상태로 다시 시작합니다.</p>
+        <button id="reset-demo-state" class="danger-button" type="button">
+          <span aria-hidden="true">${iconSvg("repeat")}</span>
+          데모 상태 초기화
+        </button>
+      </article>
     </div>
   `;
 }
@@ -2769,7 +2839,7 @@ function caseContextMarkup() {
       "분석 결과",
       "생성 산출물과 다음 행동",
       analysisResultMarkup(item),
-      item.analysisResult ? `${item.analysisResult.confidence}% 신뢰도` : "미생성",
+      item.status === "Agent Running" ? "처리 중" : item.analysisResult ? `${item.analysisResult.confidence}% 신뢰도` : "미생성",
     )}
 
     ${collapsiblePanel(
@@ -2795,6 +2865,15 @@ function caseContextMarkup() {
 }
 
 function analysisResultMarkup(item) {
+  if (item.status === "Agent Running") {
+    return `
+      <div class="result-empty loading-result" aria-live="polite">
+        <span class="loading-spinner" aria-hidden="true"></span>
+        <strong>${escapeHtml(item.processingStep || "에이전트가 케이스를 분석 중입니다.")}</strong>
+        <p>근거 수집, 위험 분류, 승인 게이트 검토가 끝나면 이 영역에 분석 결과와 생성 산출물이 표시됩니다.</p>
+      </div>
+    `;
+  }
   if (!item.analysisResult) {
     return `
       <div class="result-empty">
@@ -3007,6 +3086,7 @@ function timestamp() {
 
 function persistState() {
   try {
+    lastSavedAt = timestamp();
     window.localStorage.setItem(
       appStorageKey,
       JSON.stringify({
@@ -3016,6 +3096,7 @@ function persistState() {
         scenarioResults,
         caseSequence,
         runSequence,
+        lastSavedAt,
       }),
     );
   } catch (error) {
@@ -3034,6 +3115,7 @@ function loadPersistedState() {
     if (Array.isArray(state.scenarioResults)) scenarioResults = state.scenarioResults;
     if (Number.isFinite(state.caseSequence)) caseSequence = state.caseSequence;
     if (Number.isFinite(state.runSequence)) runSequence = state.runSequence;
+    if (state.lastSavedAt) lastSavedAt = state.lastSavedAt;
     if (!cases.some((item) => item.id === selectedCaseId) && cases[0]) selectedCaseId = cases[0].id;
   } catch (error) {
     console.warn("LocalGuard state could not be loaded", error);
@@ -3070,6 +3152,10 @@ function buildDashboardData() {
   const jeonseRisk = scoped.filter((item) => item.pains.includes("jeonse-fraud"));
   const blocked = scoped.filter((item) => item.status === "Escalated" || item.gates.some((gate) => gate[1] === "blocked"));
   const pending = scoped.filter((item) => item.status === "Approval Pending");
+  const userInput = scoped.filter((item) => caseDataSource(item) === "사용자 입력 데이터");
+  const demoData = scoped.filter((item) => caseDataSource(item) === "데모 데이터");
+  const savedResults = scoped.filter((item) => item.resultSaved);
+  const followUps = scoped.filter((item) => item.nextTaskCreated);
   const evidenceLinked = scoped.filter((item) => item.evidenceIds && item.evidenceIds.length).length;
   const evidenceRate = scoped.length ? Math.round((evidenceLinked / scoped.length) * 100) : 0;
   const spent = agents.reduce((sum, agent) => sum + agent.spent, 0);
@@ -3099,6 +3185,10 @@ function buildDashboardData() {
     jeonseRisk,
     blocked,
     pending,
+    userInput,
+    demoData,
+    savedResults,
+    followUps,
     evidenceRate,
     spent,
     budget,
@@ -3175,6 +3265,12 @@ function createFollowUpTask(item) {
       : "RM 콜백 태스크와 서류 안내 태스크를 생성했습니다.";
   item.audit.push([timestamp(), nextTask]);
   activity.unshift([timestamp(), item.owner, "created follow-up task", item.code]);
+  scenarioResults.unshift({
+    time: timestamp(),
+    caseCode: item.code,
+    title: item.customerName,
+    value: nextTask,
+  });
   persistState();
   notify(nextTask);
   render();
@@ -3294,6 +3390,8 @@ function runJeonseDiagnosis(form) {
   item.riskScore = score;
   item.priority = score >= 90 ? "critical" : score >= 80 ? "urgent" : "high";
   item.jeonseInputs = { deposit, market, assets, income, rights, ratio, exposureRatio, housingBurden };
+  item.resultSaved = false;
+  item.nextTaskCreated = false;
   item.exposure = `전세보증금 ${formatWon(deposit)} · 총자산 대비 ${exposureRatio}%`;
   item.primaryPain = `전세가율 ${ratio}% · ${rights}`;
   item.rootCauses = [
@@ -3439,6 +3537,7 @@ function startAgentRun(item, command) {
 
   item.status = "Agent Running";
   item.stage = "in_progress";
+  item.processingStep = "에이전트 실행 준비 중";
   item.audit.push([timestamp(), `에이전트 실행 ${run.id} 시작: ${command}`]);
   activity.unshift([timestamp(), item.owner, "checked out", item.code]);
   persistState();
@@ -3446,6 +3545,7 @@ function startAgentRun(item, command) {
   window.setTimeout(() => {
     if (run.status !== "running") return;
     const target = cases.find((entry) => entry.id === run.caseId);
+    if (target) target.processingStep = "근거 수집과 위험 신호 교차 확인 중";
     run.log.push([
       timestamp(),
       target && target.pains.includes("jeonse-fraud")
@@ -3477,6 +3577,9 @@ function startAgentRun(item, command) {
           : "승인 게이트: 조치 초안이 사람 검토 단계에 들어갔습니다.",
       );
       target.analysisResult = createAnalysisResult(target, "agent-run");
+      delete target.processingStep;
+      target.resultSaved = false;
+      target.nextTaskCreated = false;
       target.audit.push([timestamp(), `에이전트 실행 ${run.id} 완료 및 승인 정책을 검토했습니다.`]);
       activity.unshift([timestamp(), "Approval Gate", escalate ? "escalated case" : "created approval", target.code]);
     }
@@ -3536,7 +3639,11 @@ function rejectAction() {
 function dispatchCommand() {
   const item = currentCase();
   const commandInput = document.getElementById("command-input");
-  const command = (commandInput ? commandInput.value.trim() : "") || "empty command";
+  const command = commandInput ? commandInput.value.trim() : "";
+  if (!command) {
+    notify("운영 지시를 입력해주세요.");
+    return;
+  }
   item.audit.push([timestamp(), `오케스트레이터 지시 수신: ${command}`]);
   activity.unshift([timestamp(), "LocalGuard Orchestrator", "dispatched command", item.code]);
   const run = startAgentRun(item, command);
@@ -3551,6 +3658,12 @@ function dispatchCommand() {
   activeDetailType = "case";
   persistState();
   render();
+}
+
+function resetDemoState() {
+  window.localStorage.removeItem(appStorageKey);
+  notify("데모 상태를 초기화합니다.");
+  window.setTimeout(() => window.location.reload(), 300);
 }
 
 function newCaseDemo() {
@@ -3590,6 +3703,7 @@ function newCaseDemo() {
   selectedCaseId = fresh.id;
   activeView = "cases";
   activeDetailType = "case";
+  persistState();
   render();
 }
 
