@@ -16,6 +16,7 @@ required = [
     ROOT / "_체계/README.md",
     ROOT / "자산/README.md",
     ROOT / "산출/README.md",
+    ROOT / "docs/README.md",
     ROOT / "docs/00_sources/pdf-read.md",
     ROOT / "docs/00_sources/daker-page-line-read.md",
     ROOT / "docs/01_research/pain-point-evidence.md",
@@ -28,9 +29,11 @@ required = [
     ROOT / "docs/04_submission/mvp-proposal-draft.md",
     ROOT / "docs/04_submission/evaluation-fit.md",
     ROOT / "docs/05_evidence/source-index.md",
+    ROOT / "app/README.md",
     ROOT / "app/index.html",
     ROOT / "app/styles.css",
     ROOT / "app/app.js",
+    ROOT / "scripts/README.md",
 ]
 
 missing = [path for path in required if not path.exists()]
@@ -109,6 +112,8 @@ doc_needles = [
     "sidebar: 240px desktop",
     "Browser verification on the local server",
     "Mermaid",
+    "업무 범주별 에이전트 팀",
+    "현재 부족한 부분",
     "시스템 아키텍처",
     "데이터 아키텍처",
     "API 아키텍처",
