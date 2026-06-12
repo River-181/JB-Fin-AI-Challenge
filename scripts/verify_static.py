@@ -62,6 +62,11 @@ js_needles = [
     "context-panel",
     "command-input",
     "case-board",
+    "case-list-board",
+    "hagent-kanban",
+    "dispatchResultMarkup",
+    "moveCaseToColumn",
+    "approvalTab",
     "live-runs",
     "evidence-feed",
     "audit-log",
@@ -95,6 +100,9 @@ doc_needles = [
     "전세 위험 신호 탐지",
     "Map of Contents",
     "GitHub 워크스페이스",
+    "HagentOS Process Mirroring",
+    "sidebar: 240px desktop",
+    "Browser verification on the local server",
 ]
 joined_docs = "\n".join(
     path.read_text(encoding="utf-8")

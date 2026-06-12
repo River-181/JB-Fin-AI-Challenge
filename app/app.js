@@ -1,28 +1,28 @@
 const navigation = [
   {
-    section: "Command",
+    section: "업무",
     items: [
       { id: "dashboard", icon: "⌂", label: "대시보드", countKey: "dashboard" },
       { id: "inbox", icon: "!", label: "알림함", countKey: "inbox" },
-    ],
-  },
-  {
-    section: "Work",
-    items: [
-      { id: "cases", icon: "C", label: "케이스 목록", countKey: "cases" },
+      { id: "cases", icon: "C", label: "케이스", countKey: "cases" },
       { id: "approvals", icon: "A", label: "승인 큐", countKey: "approvals" },
       { id: "runs", icon: "R", label: "AgentRun", countKey: "runs" },
       { id: "jeonse", icon: "J", label: "전세 Shield", countKey: "jeonse" },
+    ],
+  },
+  {
+    section: "AI 팀",
+    items: [
+      { id: "agents", icon: "T", label: "에이전트 팀", countKey: "agents" },
+      { id: "orgchart", icon: "O", label: "Agent 조직도", countKey: "orgchart" },
+      { id: "routines", icon: "H", label: "자동화", countKey: "routines" },
       { id: "goals", icon: "G", label: "운영 목표", countKey: "goals" },
     ],
   },
   {
-    section: "Institution",
+    section: "시스템",
     items: [
-      { id: "agents", icon: "T", label: "에이전트 팀", countKey: "agents" },
-      { id: "orgchart", icon: "O", label: "Agent 조직도", countKey: "orgchart" },
       { id: "skills", icon: "K", label: "Skill Registry", countKey: "skills" },
-      { id: "routines", icon: "H", label: "Heartbeat", countKey: "routines" },
       { id: "activity", icon: "L", label: "처리 이력", countKey: "activity" },
       { id: "budget", icon: "₩", label: "API 예산", countKey: "budget" },
       { id: "settings", icon: "S", label: "설정", countKey: "settings" },
@@ -587,7 +587,11 @@ let selectedFeatureId = null;
 let selectedEvidenceId = null;
 let activeDetailType = "case";
 let activeView = "dashboard";
-let boardMode = "kanban";
+let boardMode = "list";
+let caseSearchQuery = "";
+let approvalTab = "pending";
+let lastDispatchResult = null;
+let draggedCaseId = null;
 let railFilter = "all";
 let caseSequence = 201;
 let runSequence = 1;
@@ -697,10 +701,43 @@ function statusClass(status) {
 
 function statusToColumn(status) {
   if (status === "Approved") return "done";
-  if (status === "Approval Pending") return "approval";
-  if (status === "Agent Running") return "running";
+  if (status === "Approval Pending") return "in_review";
+  if (status === "Agent Running") return "in_progress";
   if (status === "Escalated" || status === "Rejected") return "blocked";
   return "todo";
+}
+
+function columnToStatus(column) {
+  const statuses = {
+    backlog: "New",
+    todo: "New",
+    in_progress: "Agent Running",
+    in_review: "Approval Pending",
+    blocked: "Escalated",
+    done: "Approved",
+  };
+  return statuses[column] || "New";
+}
+
+function searchableCases() {
+  const query = caseSearchQuery.trim().toLowerCase();
+  return visibleCases().filter((item) => {
+    if (!query) return true;
+    return [
+      item.code,
+      item.customerName,
+      item.affiliate,
+      item.region,
+      item.industry,
+      item.primaryPain,
+      item.owner,
+      ...item.pains,
+      ...item.rootCauses,
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(query);
+  });
 }
 
 function counts() {
@@ -788,20 +825,20 @@ function renderMetrics() {
   const highRisk = scoped.filter((item) => item.riskScore >= 85).length;
   const pending = scoped.filter((item) => item.status === "Approval Pending").length;
   const running = scoped.filter((item) => item.status === "Agent Running").length;
-  const spend = agents.reduce((sum, agent) => sum + agent.spent, 0);
-  const total = agents.reduce((sum, agent) => sum + agent.budget, 0);
+  const jeonse = scoped.filter((item) => item.pains.includes("jeonse-fraud")).length;
   const cards = [
-    ["High Risk", highRisk, "Fraud, rate shock, delinquency watch"],
-    ["Approval Queue", pending, "RM 또는 준법 승인 대기"],
-    ["Live AgentRun", running, "현재 실행 중인 Agent 작업"],
-    ["API Budget", `${Math.round((spend / total) * 100)}%`, `₩${spend.toLocaleString()} / ₩${total.toLocaleString()}`],
+    ["실행 중 에이전트", running, "현재 AgentRun과 승인 전 처리 흐름"],
+    ["활성 케이스", scoped.length, `${highRisk}건은 High Risk 이상`],
+    ["전세 Shield", jeonse, "전세가율, 권리관계, 보증보험 점검"],
+    ["승인 대기", pending, "RM 또는 준법 승인 대기"],
   ];
   metricGrid.innerHTML = cards
     .map(
       ([label, value, detail]) => `
         <article class="metric-card">
-          <span>${escapeHtml(label)}</span>
+          <div class="metric-icon" aria-hidden="true">${escapeHtml(String(label).charAt(0))}</div>
           <strong>${escapeHtml(value)}</strong>
+          <span>${escapeHtml(label)}</span>
           <p>${escapeHtml(detail)}</p>
         </article>
       `,
@@ -812,33 +849,37 @@ function renderMetrics() {
 function renderBoard() {
   const caseBoard = document.getElementById("case-board");
   if (!caseBoard) return;
-  const scoped = visibleCases();
+  const scoped = searchableCases();
 
-  if (boardMode === "queue") {
-    caseBoard.classList.add("is-queue");
+  if (boardMode === "list") {
+    caseBoard.className = "case-board case-list-board";
     const queued = scoped.slice().sort((a, b) => b.riskScore - a.riskScore);
     caseBoard.innerHTML = `
-      <div class="queue-list">
-        ${queued.length ? queued.map(renderCaseCard).join("") : '<div class="empty-state">대기 case 없음</div>'}
+      <div class="case-list">
+        ${queued.length ? groupedCaseList(queued) : '<div class="empty-state">검색 조건에 맞는 case 없음</div>'}
       </div>
     `;
     return;
   }
 
-  caseBoard.classList.remove("is-queue");
+  caseBoard.className = "case-board hagent-kanban";
   const columns = [
+    ["backlog", "BACKLOG"],
     ["todo", "TODO"],
-    ["running", "IN PROGRESS"],
-    ["approval", "APPROVAL"],
-    ["done", "DONE"],
+    ["in_progress", "IN PROGRESS"],
+    ["in_review", "REVIEW"],
     ["blocked", "BLOCKED"],
+    ["done", "DONE"],
   ];
 
   caseBoard.innerHTML = columns
     .map(([key, label]) => {
-      const items = scoped.filter((item) => statusToColumn(item.status) === key);
+      const items =
+        key === "backlog"
+          ? scoped.filter((item) => item.status === "New" && item.riskScore < 70)
+          : scoped.filter((item) => statusToColumn(item.status) === key && !(key === "todo" && item.riskScore < 70));
       return `
-        <section class="board-column">
+        <section class="board-column" data-drop-status="${escapeHtml(key)}">
           <h4><span>${label}</span><span>${items.length}</span></h4>
           ${
             items.length
@@ -851,9 +892,54 @@ function renderBoard() {
     .join("");
 }
 
+function groupedCaseList(items) {
+  const groups = [
+    ["approval", "승인 필요", (item) => item.status === "Approval Pending"],
+    ["running", "Agent 실행 중", (item) => item.status === "Agent Running"],
+    ["risk", "고위험 점검", (item) => item.riskScore >= 85 && item.status !== "Approval Pending"],
+    ["new", "신규/분류", (item) => item.status === "New" && item.riskScore < 85],
+    ["closed", "완료/차단", (item) => ["Approved", "Escalated", "Rejected"].includes(item.status)],
+  ];
+  const seen = new Set();
+  const markup = groups
+    .map(([key, label, matcher]) => {
+      const matched = items.filter((item) => !seen.has(item.id) && matcher(item));
+      matched.forEach((item) => seen.add(item.id));
+      if (!matched.length) return "";
+      return `
+        <section class="case-list-group" data-case-group="${escapeHtml(key)}">
+          <div class="case-list-heading">
+            <strong>${escapeHtml(label)}</strong>
+            <span>${matched.length}</span>
+          </div>
+          <div class="case-list-rows">
+            ${matched.map(renderCaseRow).join("")}
+          </div>
+        </section>
+      `;
+    })
+    .join("");
+  return markup || '<div class="empty-state">표시할 case 없음</div>';
+}
+
+function renderCaseRow(item) {
+  return `
+    <button class="case-row ${item.id === selectedCaseId ? "is-active" : ""}" type="button" data-case-id="${escapeHtml(item.id)}">
+      <span class="case-row-code">${escapeHtml(item.code)}</span>
+      <span class="case-row-main">
+        <strong>${escapeHtml(item.customerName)}</strong>
+        <small>${escapeHtml(item.region)} · ${escapeHtml(item.segment)} · ${escapeHtml(item.primaryPain)}</small>
+      </span>
+      <span class="case-row-owner">${escapeHtml(item.owner)}</span>
+      <span class="status-pill ${statusClass(item.status)}">${escapeHtml(item.status)}</span>
+      <span class="risk-score">${item.riskScore}</span>
+    </button>
+  `;
+}
+
 function renderCaseCard(item) {
   return `
-    <button class="case-card ${item.id === selectedCaseId ? "is-active" : ""}" type="button" data-case-id="${escapeHtml(item.id)}">
+    <button class="case-card ${item.id === selectedCaseId ? "is-active" : ""}" type="button" draggable="true" data-draggable-case="${escapeHtml(item.id)}" data-case-id="${escapeHtml(item.id)}">
       <span class="mini-line">
         <span>${escapeHtml(item.code)}</span>
         <span>${escapeHtml(item.affiliate)}</span>
@@ -929,6 +1015,21 @@ function bindPageActions() {
       render();
     });
   });
+  const caseSearch = document.getElementById("case-search");
+  if (caseSearch) {
+    caseSearch.addEventListener("input", (event) => {
+      caseSearchQuery = event.target.value;
+      renderBoard();
+      bindSelectionTargets();
+      bindDragTargets();
+    });
+  }
+  document.querySelectorAll("[data-approval-tab]").forEach((button) => {
+    button.addEventListener("click", () => {
+      approvalTab = button.dataset.approvalTab;
+      render();
+    });
+  });
   document.querySelectorAll("[data-approve-case]").forEach((button) => {
     button.addEventListener("click", () => {
       selectedCaseId = button.dataset.approveCase;
@@ -952,6 +1053,7 @@ function bindPageActions() {
       render();
     });
   });
+  bindDragTargets();
 }
 
 function heroMarkup() {
@@ -972,7 +1074,7 @@ function heroMarkup() {
 
 function pageHeader(eyebrow, title, description) {
   return `
-    <section class="page-header">
+    <section class="workspace-header">
       <div>
         <p class="eyebrow">${escapeHtml(eyebrow)}</p>
         <h2>${escapeHtml(title)}</h2>
@@ -984,7 +1086,7 @@ function pageHeader(eyebrow, title, description) {
 
 function panelMarkup(eyebrow, title, body, extraClass = "") {
   return `
-    <section class="panel ${extraClass}">
+    <section class="panel workspace-panel ${extraClass}">
       <div class="panel-head">
         <div>
           <p class="eyebrow">${escapeHtml(eyebrow)}</p>
@@ -998,16 +1100,16 @@ function panelMarkup(eyebrow, title, body, extraClass = "") {
 
 function commandMarkup() {
   return `
-    <section class="command-panel" aria-label="orchestrator command">
-      <div>
-        <p class="eyebrow">Orchestrator Command</p>
-        <h3>지역 금융 오케스트레이터에게 지시하기</h3>
+    <section class="command-panel workspace-panel" aria-label="orchestrator command">
+      <div class="instruction-copy">
+        <p class="eyebrow">운영 지시</p>
+        <h3>한 줄로 바로 실행합니다.</h3>
+        <p>Case 생성, Agent 배정, 승인 큐 등록, 감사 로그까지 같은 프로세스로 처리합니다.</p>
       </div>
       <div class="command-row">
-        <textarea id="command-input" rows="2">전주 카페 case의 금리 부담, 정책금융 후보, 고객 안내 초안을 승인 가능한 형태로 정리해줘.</textarea>
-        <button id="dispatch-command" class="primary-button" type="button">
-          <span aria-hidden="true">▶</span>
-          Dispatch
+        <textarea id="command-input" rows="3" aria-label="운영 지시 입력">전주 카페 case의 금리 부담, 정책금융 후보, 고객 안내 초안을 승인 가능한 형태로 정리해줘.</textarea>
+        <button id="dispatch-command" class="primary-button icon-command-button" type="button" title="Dispatch">
+          <span aria-hidden="true">↗</span>
         </button>
       </div>
     </section>
@@ -1016,12 +1118,15 @@ function commandMarkup() {
 
 function dashboardPage() {
   return `
-    ${heroMarkup()}
+    ${pageHeader("Dashboard", "대시보드", "오케스트레이터 상태와 최근 흐름을 한 화면에서 확인합니다.")}
     ${commandMarkup()}
+    ${dispatchResultMarkup()}
     <section id="metric-grid" class="metric-grid" aria-label="metrics"></section>
-    <section class="page-two-col">
-      ${panelMarkup("Live Agent Runs", "실시간 실행", '<div id="live-runs" class="live-runs"></div><span id="live-count" class="count-pill ghost-count">0</span>')}
-      ${panelMarkup("Dashboard Brief", "오늘 운영 브리프", dashboardView())}
+    <section class="dashboard-grid">
+      ${panelMarkup("Live Agent Runs", "실시간 실행", '<div id="live-runs" class="live-runs"></div><span id="live-count" class="count-pill ghost-count">0</span>', "live-panel")}
+      ${panelMarkup("Process", "처리 흐름 상태", dashboardView(), "process-panel")}
+      ${panelMarkup("Recent Cases", "최근 케이스", recentCasesView(), "recent-panel")}
+      ${panelMarkup("Activity", "최근 처리 이력", activityView(), "activity-panel")}
     </section>
   `;
 }
@@ -1035,11 +1140,20 @@ function inboxPage() {
 
 function casesPage() {
   return `
-    ${pageHeader("Case Board", "위험 케이스 칸반", "금융 위험 case를 TODO, IN PROGRESS, APPROVAL, DONE, BLOCKED 상태로 관리합니다.")}
+    ${pageHeader("Cases", "케이스", "지역 금융 위험 case를 리스트로 빠르게 읽고, 보드에서 상태를 이동합니다.")}
     ${panelMarkup(
-      "Case Board",
-      "위험 케이스 칸반",
-      `<div class="view-switch board-switch" aria-label="board mode"><button class="${boardMode === "kanban" ? "is-active" : ""}" type="button" data-board-mode="kanban">Kanban</button><button class="${boardMode === "queue" ? "is-active" : ""}" type="button" data-board-mode="queue">Queue</button></div><div id="case-board" class="case-board"></div>`,
+      "Case Workspace",
+      "위험 케이스 운영",
+      `<div class="case-toolbar">
+        <label class="case-search">
+          <span>검색</span>
+          <input id="case-search" type="search" value="${escapeHtml(caseSearchQuery)}" placeholder="고객, 지역, pain, Agent 검색" />
+        </label>
+        <div class="view-switch board-switch" aria-label="board mode">
+          <button class="${boardMode === "list" ? "is-active" : ""}" type="button" data-board-mode="list">List</button>
+          <button class="${boardMode === "kanban" ? "is-active" : ""}" type="button" data-board-mode="kanban">Board</button>
+        </div>
+      </div><div id="case-board" class="case-board"></div>`,
       "board-panel",
     )}
   `;
@@ -1048,7 +1162,14 @@ function casesPage() {
 function approvalsPage() {
   return `
     ${pageHeader("Approvals", "승인 큐", "고객-facing 행동, 법률/권리 리스크, 금융조건 표현을 사람 승인 전까지 차단합니다.")}
-    ${panelMarkup("Approval Queue", "승인 대기 항목", approvalsView())}
+    ${panelMarkup(
+      "Approval Queue",
+      "승인 대기 항목",
+      `<div class="view-tabs approval-tabs">
+        ${["all", "pending", "approved", "rejected"].map((tab) => `<button class="${approvalTab === tab ? "is-active" : ""}" type="button" data-approval-tab="${tab}">${escapeHtml(approvalTabLabel(tab))}</button>`).join("")}
+      </div>
+      ${approvalsView()}`,
+    )}
   `;
 }
 
@@ -1126,17 +1247,56 @@ function settingsPage() {
 }
 
 function dashboardView() {
+  const scoped = visibleCases();
+  const flow = [
+    ["백로그", scoped.filter((item) => item.status === "New").length, "신규 접수와 pain 분류 대기"],
+    ["진행 중", scoped.filter((item) => item.status === "Agent Running").length, "AgentRun으로 근거와 초안 생성"],
+    ["검토 중", scoped.filter((item) => item.status === "Approval Pending").length, "RM/준법 승인 대기"],
+    ["차단됨", scoped.filter((item) => item.status === "Escalated" || item.status === "Rejected").length, "외부 행동 차단 또는 반려"],
+    ["완료", scoped.filter((item) => item.status === "Approved").length, "승인 후 감사 로그 기록"],
+  ];
   return `
-    <div class="work-grid">
-      ${workItem("지시 입력 바", "자연어 지시를 Orchestrator가 Case와 AgentRun으로 변환한다.", "대시보드 상단 고정")}
-      ${workItem("라이브 에이전트 패널", "실행 중인 Agent, 연결 case, transcript preview를 보여준다.", "실시간 상태")}
-      ${workItem("4개 지표 카드", "High Risk, Approval, Live Run, API Budget을 요약한다.", "운영 현황")}
-      ${workItem("최근 활동", "Agent checked out, approval created, status changed를 감사 로그처럼 표시한다.", "Activity")}
-      ${workItem("최근 케이스", "지역 금융 위험 case를 TODO/RUNNING/APPROVAL/BLOCKED로 구분한다.", "Kanban")}
-      ${workItem("전세 Shield", "전세가율, 권리관계, 고객 자산노출, 보증보험, 은행 상담 연결을 전용 Agent 라인으로 처리한다.", "Jeonse")}
-      ${workItem("오늘 후속조치", "SLA 만료 전 담당 RM 승인 또는 escalation을 유도한다.", "Follow-up")}
+    <div class="process-flow">
+      ${flow
+        .map(
+          ([label, value, detail]) => `
+            <article class="process-step">
+              <strong>${escapeHtml(value)}</strong>
+              <span>${escapeHtml(label)}</span>
+              <p>${escapeHtml(detail)}</p>
+            </article>
+          `,
+        )
+        .join("")}
     </div>
   `;
+}
+
+function dispatchResultMarkup() {
+  if (!lastDispatchResult) return "";
+  return `
+    <section class="dispatch-result workspace-panel">
+      <div>
+        <p class="eyebrow">AgentRun Created</p>
+        <h3>${escapeHtml(lastDispatchResult.caseCode)} · ${escapeHtml(lastDispatchResult.caseTitle)}</h3>
+        <p>${escapeHtml(lastDispatchResult.summary)}</p>
+      </div>
+      <div class="dispatch-result-side">
+        <span class="status-pill status-running">${escapeHtml(lastDispatchResult.runId)}</span>
+        <span>${escapeHtml(lastDispatchResult.next)}</span>
+      </div>
+    </section>
+  `;
+}
+
+function recentCasesView() {
+  const rows = visibleCases()
+    .slice()
+    .sort((a, b) => b.riskScore - a.riskScore)
+    .slice(0, 5)
+    .map(renderCaseRow)
+    .join("");
+  return `<div class="case-list compact-case-list">${rows}</div>`;
 }
 
 function inboxView() {
@@ -1170,10 +1330,16 @@ function casesView() {
 }
 
 function approvalsView() {
-  const approvals = visibleCases().filter((item) => item.status === "Approval Pending");
+  const approvals = visibleCases().filter((item) => {
+    if (approvalTab === "all") return ["Approval Pending", "Approved", "Rejected", "Escalated"].includes(item.status);
+    if (approvalTab === "pending") return item.status === "Approval Pending";
+    if (approvalTab === "approved") return item.status === "Approved";
+    if (approvalTab === "rejected") return item.status === "Rejected" || item.status === "Escalated";
+    return true;
+  });
   if (!approvals.length) return '<div class="empty-state">승인 대기 항목 없음</div>';
   return `
-    <div class="two-col">
+    <div class="approval-list">
       ${approvals
         .map(
           (item) => `
@@ -1184,11 +1350,11 @@ function approvalsView() {
               </div>
               <p>${escapeHtml(item.code)} · ${escapeHtml(item.customerName)} · ${escapeHtml(item.nextAction)}</p>
               <div class="action-row approval-actions">
-                <button class="secondary-button" type="button" data-approve-case="${escapeHtml(item.id)}">
+                <button class="secondary-button" type="button" data-approve-case="${escapeHtml(item.id)}" ${item.status === "Approval Pending" ? "" : "disabled"}>
                   <span aria-hidden="true">✓</span>
                   Approve
                 </button>
-                <button class="danger-button" type="button" data-reject-case="${escapeHtml(item.id)}">
+                <button class="danger-button" type="button" data-reject-case="${escapeHtml(item.id)}" ${item.status === "Approval Pending" ? "" : "disabled"}>
                   <span aria-hidden="true">×</span>
                   Reject
                 </button>
@@ -1200,6 +1366,15 @@ function approvalsView() {
         .join("")}
     </div>
   `;
+}
+
+function approvalTabLabel(tab) {
+  return {
+    all: "전체",
+    pending: "대기",
+    approved: "승인",
+    rejected: "차단/반려",
+  }[tab] || tab;
 }
 
 function runStatusLabel(status) {
@@ -1550,8 +1725,26 @@ function renderProperties() {
     markup = caseContextMarkup();
   }
 
-  contextPanel.innerHTML = markup;
+  contextPanel.innerHTML = `
+    <div class="properties-header">
+      <div>
+        <p class="eyebrow">Properties</p>
+        <h2>${escapeHtml(propertyPanelTitle())}</h2>
+      </div>
+      <span class="status-pill status-new">${escapeHtml(activeDetailType)}</span>
+    </div>
+    ${markup}
+  `;
   bindContextActions();
+}
+
+function propertyPanelTitle() {
+  if (activeDetailType === "agent" && currentAgent()) return currentAgent().name;
+  if (activeDetailType === "skill" && currentSkill()) return currentSkill().slug;
+  if (activeDetailType === "feature" && currentFeature()) return currentFeature().title;
+  if (activeDetailType === "view") return "선택 화면 요약";
+  const item = currentCase();
+  return item ? `${item.code} · ${item.customerName}` : "속성";
 }
 
 function caseLinkButton(item) {
@@ -2095,8 +2288,15 @@ function dispatchCommand() {
   const command = (commandInput ? commandInput.value.trim() : "") || "empty command";
   item.audit.push([timestamp(), `Orchestrator command received: ${command}`]);
   activity.unshift([timestamp(), "LocalGuard Orchestrator", "dispatched command", item.code]);
-  startAgentRun(item, command);
-  activeView = "runs";
+  const run = startAgentRun(item, command);
+  lastDispatchResult = {
+    caseCode: item.code,
+    caseTitle: item.customerName,
+    runId: run.id,
+    summary: "지시가 AgentRun으로 변환되었고 담당 Agent에게 case context, evidence, approval gate가 전달되었습니다.",
+    next: "완료된 초안은 승인 큐와 감사 로그에 자동 반영됩니다.",
+  };
+  activeView = "dashboard";
   activeDetailType = "case";
   render();
 }
@@ -2169,6 +2369,60 @@ function selectFeature(featureId) {
 function selectEvidence(entryId) {
   selectedEvidenceId = selectedEvidenceId === entryId ? null : entryId;
   render();
+}
+
+function moveCaseToColumn(caseId, column) {
+  const item = cases.find((entry) => entry.id === caseId);
+  if (!item) return;
+  const nextStatus = columnToStatus(column);
+  if (item.status === nextStatus) return;
+  const previous = item.status;
+  if (nextStatus === "Agent Running") {
+    selectedCaseId = item.id;
+    startAgentRun(item, `Kanban status move: ${previous} -> IN PROGRESS. ${item.nextAction}`);
+    lastDispatchResult = {
+      caseCode: item.code,
+      caseTitle: item.customerName,
+      runId: agentRuns[0].id,
+      summary: "보드 상태 이동으로 AgentRun이 시작되었습니다.",
+      next: "완료된 초안은 승인 큐로 이동합니다.",
+    };
+    render();
+    return;
+  }
+  item.status = nextStatus;
+  item.stage = column;
+  item.audit.push([timestamp(), `Kanban status changed: ${previous} -> ${nextStatus}.`]);
+  activity.unshift([timestamp(), "LocalGuard Orchestrator", "changed status", item.code]);
+  selectedCaseId = item.id;
+  activeDetailType = "case";
+  render();
+}
+
+function bindDragTargets() {
+  document.querySelectorAll("[data-draggable-case]").forEach((card) => {
+    card.addEventListener("dragstart", (event) => {
+      draggedCaseId = card.dataset.draggableCase;
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", draggedCaseId);
+    });
+  });
+  document.querySelectorAll("[data-drop-status]").forEach((column) => {
+    column.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      column.classList.add("is-drag-over");
+    });
+    column.addEventListener("dragleave", () => {
+      column.classList.remove("is-drag-over");
+    });
+    column.addEventListener("drop", (event) => {
+      event.preventDefault();
+      column.classList.remove("is-drag-over");
+      const caseId = event.dataTransfer.getData("text/plain") || draggedCaseId;
+      draggedCaseId = null;
+      moveCaseToColumn(caseId, column.dataset.dropStatus);
+    });
+  });
 }
 
 function bindPress(element, handler) {
