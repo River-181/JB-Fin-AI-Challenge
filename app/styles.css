@@ -4827,3 +4827,15 @@ body {
 .panel-more[open] > summary::before { content: "▾ "; }
 .panel-more[open] > summary { margin-bottom: 8px; }
 .panel-more .panel { margin-bottom: 8px; }
+
+/* M5 · 에이전트 헬스 요약 */
+.agent-health { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.health-stats { flex: 1; min-width: 240px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.health-stat { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 8px; background: #f7f9fc; border: 1px solid #eef2f7; }
+.health-stat span { font-size: 11px; color: var(--muted); font-weight: 700; }
+.health-stat strong { font-size: 20px; color: var(--ink); }
+.health-stat.health-running { border-left: 3px solid #6046b6; }
+.health-stat.health-pending { border-left: 3px solid #b76700; }
+.health-stat.health-idle { border-left: 3px solid #8796aa; }
+.health-stat.health-queue { border-left: 3px solid var(--blue-700); }
+@media (max-width: 640px) { .health-stats { grid-template-columns: repeat(2, 1fr); } }

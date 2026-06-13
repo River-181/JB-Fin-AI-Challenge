@@ -434,7 +434,7 @@ const initialCases = [
     riskScore: 88,
     status: "Approval Pending",
     priority: "urgent",
-    zeroHuman: "L2 초안 + 편집 후 발송",
+    zeroHuman: "초안 작성 + 편집 후 발송",
     sla: "2h",
     owner: "Cashflow Triage Agent",
     stage: "pending_approval",
@@ -474,7 +474,7 @@ const initialCases = [
     riskScore: 72,
     status: "New",
     priority: "high",
-    zeroHuman: "L1 초안 + 원클릭 승인",
+    zeroHuman: "초안 작성 + 원클릭 승인",
     sla: "1d",
     owner: "Policy Match Agent",
     stage: "todo",
@@ -509,7 +509,7 @@ const initialCases = [
     riskScore: 94,
     status: "Escalated",
     priority: "critical",
-    zeroHuman: "L4 정보 제공만",
+    zeroHuman: "정보 제공만",
     sla: "30m",
     owner: "Fraud Shield Agent",
     stage: "blocked",
@@ -547,7 +547,7 @@ const initialCases = [
     riskScore: 67,
     status: "Agent Running",
     priority: "medium",
-    zeroHuman: "L1 초안 + 원클릭 승인",
+    zeroHuman: "초안 작성 + 원클릭 승인",
     sla: "1d",
     owner: "Pain Radar Agent",
     stage: "in_progress",
@@ -580,7 +580,7 @@ const initialCases = [
     riskScore: 91,
     status: "Approval Pending",
     priority: "critical",
-    zeroHuman: "L3 분석 + 사람 결정",
+    zeroHuman: "분석 + 사람 결정",
     sla: "오늘 18:00",
     owner: "Jeonse Shield Lead",
     stage: "pending_approval",
@@ -703,7 +703,7 @@ const demoProfiles = {
     view: "inbox",
     title: "GP-2 보이스피싱 차단",
     currentStep: 3,
-    steps: ["알림 수신", "케이스 전환", "사기 신호 분석", "L4 자동 차단 제안", "사람 승인/반려", "차단 결과", "감사 기록"],
+    steps: ["알림 수신", "케이스 전환", "사기 신호 분석", "자동 차단 제안", "사람 승인/반려", "차단 결과", "감사 기록"],
     value: "고객 대상 외부 발송을 차단하고 보안팀 검토 근거를 남깁니다.",
     action: "승인 큐에서 차단 승인",
   },
@@ -1730,11 +1730,36 @@ function goalsPage() {
   `;
 }
 
+function healthStat(label, value, kind) {
+  return `<div class="health-stat health-${kind}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
+}
+
+function agentHealthView() {
+  const running = agents.filter((a) => a.status === "running").length;
+  const pending = agents.filter((a) => a.status === "pending_approval").length;
+  const idle = agents.filter((a) => a.status === "idle").length;
+  const totalQueue = agents.reduce((s, a) => s + (a.queue || 0), 0);
+  const spent = agents.reduce((s, a) => s + (a.spent || 0), 0);
+  const budget = agents.reduce((s, a) => s + (a.budget || 0), 0);
+  const donut = typeof svgDonut === "function" ? svgDonut(spent, budget, { label: "예산 사용률", sub: `${formatWon(spent)} / ${formatWon(budget)}` }) : "";
+  return `
+    <div class="agent-health">
+      <div class="health-stats">
+        ${healthStat("실행 중", `${running}개`, "running")}
+        ${healthStat("승인 대기", `${pending}개`, "pending")}
+        ${healthStat("유휴", `${idle}개`, "idle")}
+        ${healthStat("대기 큐", `${totalQueue}건`, "queue")}
+      </div>
+      ${donut}
+    </div>`;
+}
+
 function agentsPage() {
   return `
     ${pageHeader("에이전트", "에이전트 팀", "각 AI 에이전트의 상태, 역할, 장착 스킬, 보고 체계를 확인합니다.")}
+    ${panelMarkup("운영 현황", "에이전트 헬스 요약", agentHealthView(), "agent-health-panel panel-primary")}
     ${panelMarkup("에이전트 팀", "업무 범주별 에이전트 팀", agentsView(), "agent-team-panel")}
-    ${panelMarkup("보완 필요 사항", "현재 부족한 부분", agentReadinessView(), "agent-gap-panel")}
+    ${panelMarkup("보완 필요 사항", "현재 부족한 부분", agentReadinessView(), "agent-gap-panel panel-secondary")}
   `;
 }
 
@@ -1748,8 +1773,8 @@ function orgChartPage() {
 function skillsPage() {
   return `
     ${pageHeader("스킬", "스킬 저장소", "에이전트에게 장착되는 금융, 리스크, 계약, 준법 스킬 패키지를 확인합니다.")}
-    ${panelMarkup("승인 정책", "점수 × 조치 유형 라우팅", approvalMatrixView(), "approval-matrix-panel")}
     ${panelMarkup("스킬 저장소", "장착 가능 스킬", skillsView())}
+    ${panelMarkup("승인 정책", "점수 × 조치 유형 라우팅", approvalMatrixView(), "approval-matrix-panel panel-secondary")}
   `;
 }
 
@@ -3711,7 +3736,7 @@ function buildManualCase(form) {
       industry: "주거 · 전세계약",
       riskScore: 82,
       priority: "urgent",
-      zeroHuman: "L3 분석 + 사람 결정",
+      zeroHuman: "분석 + 사람 결정",
       owner: "Jeonse Shield Lead",
       exposure: exposureInput || "전세보증금 입력 필요 · 등기부 확인 필요",
       primaryPain: "전세사기 위험 사전 점검",
@@ -3732,7 +3757,7 @@ function buildManualCase(form) {
       industry: "사기 의심",
       riskScore: 93,
       priority: "critical",
-      zeroHuman: "L4 정보 제공만",
+      zeroHuman: "정보 제공만",
       owner: "Fraud Shield Agent",
       exposure: exposureInput || "의심 콜백 URL · 긴급 송금 요청",
       primaryPain: "외부 접촉 차단 필요",
@@ -3752,7 +3777,7 @@ function buildManualCase(form) {
     industry: "상담 접수",
     riskScore: 70,
     priority: "high",
-    zeroHuman: "L1 초안 + 원클릭 승인",
+    zeroHuman: "초안 작성 + 원클릭 승인",
     owner: "Policy Match Agent",
     exposure: exposureInput || "정책금융 상담 후보 · 서류 확인 필요",
     primaryPain: "정책금융 탐색과 상환 부담",
@@ -4106,7 +4131,7 @@ function applyDemoModeFromUrl() {
     item.riskScore = 96;
     item.audit = [
       ["09:00", "데모 GP-2: 보이스피싱 의심 알림을 케이스로 전환했습니다."],
-      ["09:01", "L4 자동 차단 제안을 생성하고 사람 승인 대기 상태로 올렸습니다."],
+      ["09:01", "자동 차단 제안을 생성하고 사람 승인 대기 상태로 올렸습니다."],
     ];
   } else if (type === "sme") {
     item.status = "Approval Pending";
@@ -4138,7 +4163,7 @@ function newCaseDemo() {
     riskScore: 55,
     status: "New",
     priority: "medium",
-    zeroHuman: "L1 초안 + 원클릭 승인",
+    zeroHuman: "초안 작성 + 원클릭 승인",
     sla: "1d",
     owner: "LocalGuard Orchestrator",
     stage: "todo",
