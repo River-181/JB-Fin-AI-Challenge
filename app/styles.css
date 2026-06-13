@@ -4688,3 +4688,86 @@ body {
 .gate-list .gate-blocked { background: #fdecea; border-color: #f3c7c2; }
 .gate-list .gate-pending { background: #fff8ec; border-color: #f3d9a8; }
 .gate-status { font-size: 11px; font-weight: 700; color: var(--muted); }
+
+/* =========================================================================
+ * M1 · 디자인 시스템 정제 (2026-06-14) — 버튼 스케일·통일, 패널 위계
+ * 파일 끝 = 최우선. 색 팔레트는 유지하고 일관성·위계만 강화.
+ * ========================================================================= */
+
+/* 버튼: 통일된 스케일·weight. 기본 38px, 작은/큰 변형 */
+.primary-button, .secondary-button, .ghost-button, .danger-button {
+  min-height: 38px;
+  padding: 0 16px;
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: 8px;
+  letter-spacing: -0.1px;
+  transition: background .12s ease, border-color .12s ease, box-shadow .12s ease;
+}
+.primary-button svg, .secondary-button svg, .ghost-button svg, .danger-button svg { width: 15px; height: 15px; }
+
+/* 1차 액션: 솔리드, 선명 */
+.primary-button {
+  color: #fff;
+  border: 1px solid var(--blue-700);
+  background: var(--blue-700);
+  box-shadow: 0 1px 2px rgba(7,86,157,0.18);
+}
+.primary-button:hover { background: #064b8a; border-color: #064b8a; }
+
+/* 2차 액션: 가시성↑ (연한 배경 + 진한 테두리·텍스트) */
+.secondary-button {
+  color: var(--blue-700);
+  border: 1px solid #9cc9e8;
+  background: #eef6fd;
+}
+.secondary-button:hover { background: #e1f0fb; border-color: var(--blue-700); }
+
+/* 보조(ghost): 중립이되 또렷한 경계 */
+.ghost-button {
+  color: #2b3a4f;
+  border: 1px solid #cdd7e3;
+  background: #fff;
+}
+.ghost-button:hover { background: #f4f7fb; border-color: #9fb1c6; }
+
+/* 위험 액션 */
+.danger-button {
+  color: var(--danger);
+  border: 1px solid #e7a9a2;
+  background: #fdecea;
+}
+.danger-button:hover { background: #fadfdb; border-color: var(--danger); }
+
+/* 크기 변형 */
+.btn-sm { min-height: 32px; padding: 0 12px; font-size: 12px; }
+.btn-lg { min-height: 44px; padding: 0 20px; font-size: 14px; }
+
+/* disabled 명확 */
+.primary-button:disabled, .secondary-button:disabled, .ghost-button:disabled, .danger-button:disabled {
+  opacity: 0.55; cursor: not-allowed; box-shadow: none;
+  color: #8796aa; border-color: #d7e1ec; background: #eef3f8;
+}
+
+/* 상세 페이지 열기 버튼 — 통일 스케일과 정렬 */
+.open-detail-button { min-height: 42px; font-weight: 700; }
+
+/* 패널 위계: 핵심(좌측 강조선) / 보조(연한 테두리) */
+.panel-primary {
+  border: 1px solid #cfe1f2;
+  border-left: 4px solid var(--blue-700);
+  background: linear-gradient(180deg, #f7fbff, #ffffff);
+}
+.panel-primary > .panel-head h3 { color: var(--blue-700); }
+.panel-secondary {
+  border: 1px solid #eef2f7;
+  background: #fcfdfe;
+}
+.panel-secondary > .panel-head h3 { color: var(--muted); font-size: 15px; }
+
+/* 섹션 그룹: 테두리 남발 대신 여백+연한 배경 */
+.group-soft {
+  background: #f7f9fc;
+  border-radius: 10px;
+  padding: 12px;
+}
