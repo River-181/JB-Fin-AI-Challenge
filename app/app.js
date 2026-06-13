@@ -4338,6 +4338,26 @@ function bindActions() {
       render();
     });
   });
+
+  const railNotify = document.getElementById("rail-notify");
+  if (railNotify) {
+    railNotify.addEventListener("click", () => {
+      activeView = "inbox";
+      activeDetailType = defaultDetailForView(activeView);
+      selectDefaultCaseForView(activeView);
+      render();
+    });
+  }
+
+  const railSettings = document.getElementById("rail-settings");
+  if (railSettings) {
+    railSettings.addEventListener("click", () => {
+      activeView = "settings";
+      activeDetailType = defaultDetailForView(activeView);
+      selectDefaultCaseForView(activeView);
+      render();
+    });
+  }
 }
 
 function bindContextActions() {

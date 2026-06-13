@@ -2778,7 +2778,7 @@ body {
 .eyebrow,
 .status-badge,
 .node-kicker {
-  color: #8b95a1;
+  color: var(--muted);
   font-weight: 700;
   letter-spacing: 0;
   text-transform: none;
@@ -4261,8 +4261,8 @@ body {
 }
 
 .audit-item small {
-  color: #738195;
-  font-size: 11px;
+  color: var(--muted);
+  font-size: 12px;
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
@@ -4324,7 +4324,7 @@ body {
 
 /* Density normalization pass: spacing, top alignment, and status chip baseline. */
 .page-content {
-  gap: var(--space-3);
+  gap: var(--space-4);
   padding-top: var(--space-4);
 }
 
@@ -4348,7 +4348,7 @@ body {
 .workspace-panel,
 .panel {
   gap: var(--space-3);
-  padding: var(--space-3);
+  padding: var(--space-4);
 }
 
 .panel-head {
@@ -4441,6 +4441,16 @@ body {
   gap: var(--space-2);
 }
 
+.case-list-group:not(:first-child) {
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--line);
+}
+
+.case-meta,
+.node-meta {
+  font-weight: 600;
+}
+
 .case-list-rows {
   gap: var(--space-1);
 }
@@ -4483,8 +4493,8 @@ body {
 }
 
 .metric-card {
-  min-height: 96px;
-  padding: var(--space-3);
+  min-height: 108px;
+  padding: var(--space-4);
 }
 
 .metric-card strong {
