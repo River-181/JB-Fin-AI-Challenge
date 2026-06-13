@@ -17,6 +17,7 @@
 - [Skill Registry](../docs/03_agents/skill-registry.md)
 - [아키텍처 다이어그램](../07_아키텍처/README.md)
 - [HagentOS 기반 JB LocalGuard OS 작업 내역](./work-log-hagentos-localguard-os.md)
+- [UI 레이아웃 밀도 개선 QA 리포트](./layout-density-qa-report-20260613.md)
 
 ## 발표/심사에서 강조할 산출 포인트
 

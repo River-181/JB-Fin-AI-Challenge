@@ -1428,6 +1428,7 @@ function renderWorkbench() {
     settings: settingsPage,
   };
 
+  pageContent.className = `page-content view-${activeView}`;
   pageContent.innerHTML = (pages[activeView] || pages.dashboard)();
   bindPageActions();
 }

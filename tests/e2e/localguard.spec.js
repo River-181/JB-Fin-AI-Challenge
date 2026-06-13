@@ -60,6 +60,38 @@ test("core routes render reachable grouped screens", async ({ page }) => {
   }
 });
 
+test("goals page keeps cards compact and top aligned", async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.goto("/index.html#goals");
+
+  const header = page.locator(".workspace-header");
+  const panel = page.locator(".workspace-panel").first();
+  await expect(page.getByRole("heading", { name: "운영 목표" })).toBeVisible();
+  await expect(panel.getByText("목표 달성률")).toBeVisible();
+  await expect(panel.getByText("분류 시간 단축")).toBeVisible();
+
+  const headerBox = await header.boundingBox();
+  const panelBox = await panel.boundingBox();
+  expect(headerBox).not.toBeNull();
+  expect(panelBox).not.toBeNull();
+  expect(panelBox.y - (headerBox.y + headerBox.height)).toBeLessThanOrEqual(20);
+  expect(panelBox.height).toBeLessThanOrEqual(380);
+
+  const goalCards = await page.locator(".view-goals .work-item").evaluateAll((items) =>
+    items.map((item) => {
+      const rect = item.getBoundingClientRect();
+      return { top: rect.top, height: rect.height };
+    }),
+  );
+  expect(goalCards.length).toBe(5);
+  for (const card of goalCards) {
+    expect(card.height).toBeLessThanOrEqual(118);
+    expect(card.top).toBeLessThan(430);
+  }
+
+  await saveShot(page, "goals-compact.png");
+});
+
 test("scenario flow runs a selected case and reaches approval state", async ({ page }) => {
   await page.goto("/index.html#cases");
   await page.locator('button.case-row[data-case-id="gwangju-wholesale"]').click();

@@ -3885,3 +3885,201 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Layout density pass: keep workspace content top-aligned and sized to content. */
+.page-content {
+  display: grid;
+  align-content: start;
+  align-items: start;
+  grid-auto-rows: max-content;
+  gap: 12px;
+  min-height: 0;
+  padding-top: 18px;
+}
+
+.page-content > *,
+.dashboard-grid > *,
+.page-two-col > *,
+.workspace-panel,
+.command-panel,
+.panel {
+  align-self: start;
+}
+
+.workspace-header,
+.page-header {
+  display: grid;
+  gap: 6px;
+}
+
+.workspace-header h2,
+.page-header h2 {
+  font-size: 26px;
+}
+
+.workspace-header p:last-child,
+.page-header p:last-child {
+  margin-top: 0;
+}
+
+.workspace-panel,
+.panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.panel-head {
+  margin-bottom: 0;
+}
+
+.panel h3,
+.command-panel h3 {
+  font-size: 19px;
+}
+
+.metric-grid,
+.dashboard-grid,
+.work-grid,
+.agent-grid,
+.skill-grid,
+.feature-grid,
+.cycle-kpis,
+.data-source-grid,
+.data-state-grid {
+  align-items: start;
+  grid-auto-rows: max-content;
+}
+
+.metric-card {
+  align-content: start;
+  gap: 8px;
+  min-height: 104px;
+  padding: 14px;
+}
+
+.metric-card strong {
+  margin-top: 6px;
+  font-size: 30px;
+  line-height: 1.05;
+}
+
+.metric-card span {
+  margin-top: 0;
+}
+
+.metric-card p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.dashboard-grid {
+  min-height: 0;
+}
+
+.live-panel {
+  min-height: 0;
+}
+
+.work-grid {
+  gap: 10px;
+}
+
+.work-item,
+.run-card,
+.agent-card,
+.skill-card,
+.activity-item,
+.evidence-card,
+.audit-item,
+.gate-row {
+  align-content: start;
+  gap: 7px;
+  padding: 12px;
+}
+
+.view-goals .workspace-panel {
+  width: 100%;
+  max-width: none;
+}
+
+.view-goals .work-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.view-goals .work-item {
+  gap: 6px;
+  min-height: 0;
+  padding: 10px;
+}
+
+.view-goals .work-item p {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.context-panel .panel,
+.context-panel .collapsible-panel,
+.context-panel .selected-case-panel {
+  display: block;
+  align-self: stretch;
+}
+
+.context-panel .collapsible-panel:not(.is-collapsed) {
+  overflow: visible;
+}
+
+.context-panel .panel-toggle {
+  position: relative;
+  z-index: 2;
+}
+
+.context-panel .panel-body {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 10px;
+  height: auto;
+}
+
+.hagent-kanban {
+  align-items: start;
+  min-height: min(520px, calc(100dvh - 210px));
+}
+
+@media (max-width: 1500px) {
+  .view-goals .work-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1180px) {
+  .page-content {
+    padding: 16px;
+  }
+
+  .view-goals .work-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .page-content {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .workspace-panel,
+  .panel {
+    padding: 12px;
+  }
+
+  .workspace-header h2,
+  .page-header h2 {
+    font-size: 24px;
+  }
+
+  .view-goals .work-grid {
+    grid-template-columns: 1fr;
+  }
+}
