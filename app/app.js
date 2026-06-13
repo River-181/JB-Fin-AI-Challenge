@@ -798,18 +798,18 @@ const statusLabels = {
 };
 
 const agentNameLabels = {
-  "LocalGuard Orchestrator": "로컬가드 오케스트레이터",
-  "Pain Radar Agent": "위험 신호 탐지 에이전트",
-  "Cashflow Triage Agent": "상환 위험 분류 에이전트",
+  "LocalGuard Orchestrator": "운영 조율 에이전트",
+  "Pain Radar Agent": "위험신호 조기감지 에이전트",
+  "Cashflow Triage Agent": "상환위험 분류 에이전트",
   "Policy Match Agent": "정책금융 매칭 에이전트",
-  "Fraud Shield Agent": "사기 차단 에이전트",
-  "RM Copilot Agent": "RM 코파일럿 에이전트",
+  "Fraud Shield Agent": "이상거래 탐지·차단 에이전트",
+  "RM Copilot Agent": "RM 보좌 에이전트",
   "Compliance Guard Agent": "준법 검토 에이전트",
   "Analytics Agent": "포트폴리오 분석 에이전트",
-  "Jeonse Shield Lead": "전세 보호 리드 에이전트",
+  "Jeonse Shield Lead": "전세위험 관리 리드",
   "Deposit Ratio Agent": "전세가율 분석 에이전트",
   "Registry Rights Agent": "등기 권리 분석 에이전트",
-  "Tenant Asset Risk Agent": "임차인 자산위험 에이전트",
+  "Tenant Asset Risk Agent": "임차인 손실위험 에이전트",
   "Contract Checklist Agent": "계약 체크리스트 에이전트",
   "Bank Linkage Agent": "은행 연계 에이전트",
   "Human RM Lead": "RM 최종 승인자",
@@ -1030,8 +1030,8 @@ function localizeLine(text) {
     "Approval request created for RM callback draft.": "RM 콜백 초안에 대한 승인 요청을 생성했습니다.",
     "Policy match case created from branch request.": "영업점 요청에서 정책금융 매칭 케이스를 생성했습니다.",
     "Suspicious callback report converted to high-risk fraud case.": "의심 콜백 제보를 고위험 사기 케이스로 전환했습니다.",
-    "Fraud Shield blocked customer-facing action.": "사기 차단 에이전트가 고객 대상 행동을 차단했습니다.",
-    "Case assigned to Pain Radar Agent.": "위험 신호 탐지 에이전트에 케이스를 배정했습니다.",
+    "Fraud Shield blocked customer-facing action.": "이상거래 탐지·차단 에이전트가 고객 대상 행동을 차단했습니다.",
+    "Case assigned to Pain Radar Agent.": "위험신호 조기감지 에이전트에 케이스를 배정했습니다.",
     "Jeonse Shield case opened from pre-contract customer 상담.": "계약 전 고객 상담에서 전세 보호 케이스를 열었습니다.",
     "Deposit Ratio and Registry Rights Agents assigned.": "전세가율 분석과 등기 권리 분석 에이전트를 배정했습니다.",
     "Approval request created for safe-contract guide and bank 상담 연결.": "안전 계약 가이드와 은행 상담 연결 승인 요청을 생성했습니다.",
@@ -3367,7 +3367,7 @@ function inferAuditActor(text) {
 function verifyAuditChain(item) {
   const records = auditChainRecords(item);
   const ok = records.every((record, index) => index === 0 || record.previousHash === records[index - 1].hash);
-  auditIntegrityResult = ok ? `정상 · ${records.length}개 레코드 해시 체인 연결` : "오류 · 이전 해시 불일치";
+  auditIntegrityResult = ok ? `정상 · ${records.length}개 레코드 무결성 검증 완료` : "오류 · 이전 해시 불일치";
   return { ok, records };
 }
 
@@ -4388,7 +4388,7 @@ function bindContextActions() {
     verifyAuditButton.addEventListener("click", () => {
       const result = verifyAuditChain(currentCase());
       const target = document.getElementById("audit-integrity-result");
-      if (target) target.textContent = result.ok ? `정상 · ${result.records.length}개 레코드 해시 체인 연결` : "오류 · 이전 해시 불일치";
+      if (target) target.textContent = result.ok ? `정상 · ${result.records.length}개 레코드 무결성 검증 완료` : "오류 · 이전 해시 불일치";
     });
   }
   if (exportAuditButton) exportAuditButton.addEventListener("click", () => exportAuditJson(currentCase()));

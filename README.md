@@ -62,7 +62,7 @@ flowchart LR
   P --> G{Data Governance<br/>PII 보호}
   G --> D[Deliverable<br/>산출물 MD]
   D --> AP[Approval<br/>사람 승인 게이트]
-  AP --> AU[Audit Ledger<br/>해시 체인]
+  AP --> AU[Audit Ledger<br/>무결성 해시]
   G -.->|원본 PII 차단| AU
 ```
 
@@ -76,7 +76,7 @@ flowchart TD
   TOK --> ROUTE{모델 라우팅}
   ROUTE -->|식별·대조| ON[국내·온프레 모델]
   ROUTE -->|비식별 요약·초안| EXT[외부 프런티어 LLM]
-  ON --> EG[Egress 가드<br/>유출 스캔]
+  ON --> EG[외부 반출 제한<br/>유출 스캔]
   EXT --> EG
   EG --> LOG[감사 원장 기록]
 ```
@@ -98,7 +98,7 @@ flowchart TD
 
 모듈 레지스트리 아키텍처로 모든 요소를 갈아끼울 수 있게 구성했습니다. 요소별 설계는 [`docs/02_product/element-specs/`](./docs/02_product/element-specs/) 참고.
 
-- **데이터 거버넌스 계층** — 등급제·토큰화·모델 라우팅·egress 가드 (핵심 차별점, 금융권 실도입 가능성)
+- **데이터 거버넌스 계층** — 등급제·토큰화·모델 라우팅·외부 반출 제한 (핵심 차별점, 금융권 실도입 가능성)
 - **히어로 케이스 자율운영 상세 페이지** — 전주 카페 SME: 타임라인→에이전트 루프→산출물→승인→감사
 - **플러그인/MCP 레지스트리** — 법령·정책·뉴스·재개발·JB 금융 DB 커넥터 (리서치 기반 실제 내용)
 - **실질 스킬 콘텐츠** — 핵심 스킬에 실제 절차·판단 기준·근거 법령, 보기/편집

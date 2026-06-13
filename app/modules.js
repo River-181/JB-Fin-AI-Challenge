@@ -119,7 +119,7 @@ function governancePanelMarkup(caseItem) {
   const g = (id && governanceLog[id]) || null;
   if (!g) {
     return `<section class="panel gov-panel"><div class="panel-head"><h3>데이터 거버넌스</h3><span class="status-badge">표준 정책</span></div>
-      <p class="md-p">이 케이스는 표준 거버넌스(등급제·토큰화·국내/외부 모델 라우팅·egress 스캔·감사)를 따릅니다.</p></section>`;
+      <p class="md-p">이 케이스는 표준 거버넌스(등급제·토큰화·국내/외부 모델 라우팅·외부 반출 스캔·감사)를 따릅니다.</p></section>`;
   }
   const tok = dataGovernance.tokenizePII(g.tokenized.before);
   const routeRows = g.routes.map((r) => `
@@ -140,7 +140,7 @@ function governancePanelMarkup(caseItem) {
       <table class="gov-table"><thead><tr><th>작업</th><th>모델</th><th>근거</th></tr></thead><tbody>${routeRows}</tbody></table>
     </div>
     <div class="gov-block">
-      <div class="gov-label">③ Egress 가드 + 감사</div>
+      <div class="gov-label">③ 외부 반출 제한 + 감사</div>
       <p class="md-p">외부 전송 ${escapeHtml(String(g.egress.scanned))}건 스캔 · <strong>${escapeHtml(String(g.egress.blocked))}건 차단</strong> — ${escapeHtml(g.egress.note)} (전 접근 감사 원장 기록)</p>
     </div>
     <div class="gov-block">
@@ -166,9 +166,9 @@ const customers = [
       { date: "2026-05", score: 79 }, { date: "2026-06", score: 88 },
     ],
     notes: [
-      { date: "2026-05-28", actor: "Pain Radar Agent", text: "카드매출 3개월 연속 감소 신호 감지(공개 상권지표 기반)." },
-      { date: "2026-06-10", actor: "Cashflow Triage Agent", text: "운전자금 상환 부담 상승, 금리인하요구권·정책금융 검토 제안." },
-      { date: "2026-06-14", actor: "Human RM Lead", text: "콜백 스크립트 검토 대기. 고객 직접 접촉 전 승인 필요." },
+      { date: "2026-05-28", actor: "위험신호 조기감지 에이전트", text: "카드매출 3개월 연속 감소 신호 감지(공개 상권지표 기반)." },
+      { date: "2026-06-10", actor: "상환위험 분류 에이전트", text: "운전자금 상환 부담 상승, 금리인하요구권·정책금융 검토 제안." },
+      { date: "2026-06-14", actor: "RM 최종 승인자", text: "콜백 스크립트 검토 대기. 고객 직접 접촉 전 승인 필요." },
     ],
   },
 ];
@@ -218,7 +218,7 @@ const deliverableRegistry = {
       id: "dlv-stress",
       title: "상환 스트레스 진단 리포트",
       kind: "report", status: "generated",
-      generatedBy: "Cashflow Triage Agent", at: "2026-06-14 10:20",
+      generatedBy: "상환위험 분류 에이전트", at: "2026-06-14 10:20",
       govNote: "비식별 수치만 외부 모델로 분석, 원본은 국내 볼트.",
       body: `# 상환 스트레스 진단 리포트\n## 대상\n- 케이스 JBG-104 · 전주 중앙로 카페(개인사업자)\n- 익스포저: 운전자금 1.8억 · 카드매출 둔화\n\n## 핵심 지표 (범위화)\n- 최근 3개월 카드매출 증감률: **-12% / -9% / -7%**\n- 운전자금 월 상환액 대비 가용 현금흐름: **약 1.1배 (경계)**\n- 추정 DSR: **상승 구간** (정밀 산정은 심사 시스템 연동 필요)\n\n## 상환 시나리오\n1. 현 금리 유지 시: 3개월 내 현금흐름 압박 가능성 **중상**\n2. 금리인하요구권 적용 시: 월 상환 부담 완화 여지\n3. 정책금융 대환 시: 만기·금리 재구조화로 압박 완화\n\n## 권고\n- 금리인하요구권 안내 + 정책금융 매칭(별도 산출물)\n- 고객 접촉은 **사람 승인 후**, 과장표현 없는 스크립트 사용\n\n> 본 리포트는 비식별 데이터 기반 초안이며 최종 판단은 RM·심사 검토를 따릅니다.`,
     },
@@ -226,7 +226,7 @@ const deliverableRegistry = {
       id: "dlv-policy",
       title: "정책금융 매칭 결과",
       kind: "report", status: "generated",
-      generatedBy: "Policy Match Agent", at: "2026-06-14 10:24",
+      generatedBy: "정책금융 매칭 에이전트", at: "2026-06-14 10:24",
       govNote: "공개 정책·법령 분석(PII 없음) → 외부 모델 허용.",
       body: `# 정책금융 매칭 결과 (초안)\n> 세부 수치는 정책 커넥터(소진공/지역신보) 최신 공고로 확정. 자격은 상담·심사 후 확정.\n\n## 후보 프로그램 (적합도 순)\n1. **소상공인 저금리 대환대출 (2026)** — 7% 이상 사업자대출 → 연 4.5% 고정 전환, 최대 5,000만원, 2년 거치+8년 분할. NCB 919점 이하. 5,000만원 기준 연 약 123만원 이자 절감. 신청: ols.semas.or.kr\n2. **소진공 일반 경영안정자금** — 대리대출, 최대 7,000만원, 운영자금(임대료·인건비·원부자재). 업력·요건 확인 필요.\n3. **소공인 특화자금(운전)** — 직접대출 최대 1억원(제조 소공인 대상, 카페는 해당성 검토).\n4. **햇살론뱅크(전북은행)** — 5,000억 공급, 소상공인 금리 최대 1%p 감면 연계.\n5. **금리인하요구권** — 금융소비자보호법상 권리, 신용상태 개선 시 인하 신청.\n\n## 적합성 메모\n- 카드매출 둔화·운전자금 부담 → **대환 + 경영안정자금** 우선, 담보 여력 제한 시 **지역신용보증재단 보증** 결합.\n- 기준금리 2.5%(2026.01 동결) 환경, 고금리 대출 보유 시 대환 효과 큼.\n\n## 다음 행동\n- 필요 서류 체크리스트(별도 산출물) 안내, RM 상담 예약, 자격 요건 사전 확인.`,
     },
@@ -234,7 +234,7 @@ const deliverableRegistry = {
       id: "dlv-script",
       title: "RM 콜백 스크립트 초안",
       kind: "script", status: "draft",
-      generatedBy: "RM Copilot Agent", at: "2026-06-14 10:28",
+      generatedBy: "RM 보좌 에이전트", at: "2026-06-14 10:28",
       govNote: "연락처 토큰 치환, 준법 검토 통과 후 발송.",
       body: `# RM 콜백 스크립트 초안 (승인 전)\n## 인사\n"안녕하세요 {{고객}}님, 전북은행 OO지점 OOO입니다. 사업 잘 되고 계신지요."\n\n## 목적 안내 (확정·과장 표현 금지)\n"최근 사업 운영자금 관련해 도움이 될 수 있는 **정책금융·금리 안내**를 드리고자 연락드렸습니다. 가입이나 승인 확정 안내가 아니며 검토 가능한 선택지를 설명드리는 것입니다."\n\n## 핵심\n- 금리인하요구권 안내\n- 정책자금/대환 검토 가능성(자격 요건은 상담·심사 후 확정)\n- 필요 서류 안내\n\n## 준법 체크\n- [x] 확정·보장 표현 없음\n- [x] 개인정보 최소 언급\n- [ ] 사람(RM) 최종 승인 — **대기**`,
     },
@@ -242,7 +242,7 @@ const deliverableRegistry = {
       id: "dlv-checklist",
       title: "상담 전 서류 체크리스트",
       kind: "checklist", status: "generated",
-      generatedBy: "Document Checklist Agent", at: "2026-06-14 10:30",
+      generatedBy: "서류 체크리스트 에이전트", at: "2026-06-14 10:30",
       govNote: "양식·항목만, 고객 데이터 미포함.",
       body: `# 상담 전 서류 체크리스트\n## 공통\n- 사업자등록증\n- 최근 부가세 신고서 / 매출 증빙\n- 임대차계약서(사업장)\n- 기존 대출 약정·잔액 확인서\n\n## 정책금융용\n- 소상공인 확인서 / 해당 요건 증빙\n- (보증 결합 시) 지역신보 요구 서류\n\n## 확인 질문\n- 최근 매출 변동 사유\n- 기존 대출 금리·만기 구조\n- 담보·보증 여력`,
     },
@@ -250,9 +250,9 @@ const deliverableRegistry = {
       id: "dlv-audit",
       title: "준법·감사 요약",
       kind: "audit", status: "generated",
-      generatedBy: "Compliance Guard / Audit Ledger", at: "2026-06-14 10:32",
+      generatedBy: "준법 검토 / 감사 원장", at: "2026-06-14 10:32",
       govNote: "거버넌스 처리·승인 게이트·감사 해시.",
-      body: `# 준법·감사 요약\n## 거버넌스\n- PII 토큰화 적용, 원본은 국내 볼트\n- 모델 라우팅: 식별 작업 국내, 분석/초안 외부(비식별)\n- Egress 스캔 1건 차단(연락처)\n\n## 승인 게이트\n- 외부 고객 접촉: **사람 승인 대기**\n- 확정·보장 표현: 차단 통과\n\n## 감사\n- 근거→판단→행동→승인 전 단계 해시 체인 기록\n- 무결성 검증: 통과`,
+      body: `# 준법·감사 요약\n## 거버넌스\n- PII 토큰화 적용, 원본은 국내 볼트\n- 모델 라우팅: 식별 작업 국내, 분석/초안 외부(비식별)\n- 외부 반출 스캔 1건 차단(연락처)\n\n## 승인 게이트\n- 외부 고객 접촉: **사람 승인 대기**\n- 확정·보장 표현: 차단 통과\n\n## 감사\n- 근거→판단→행동→승인 전 단계 무결성 해시 기록\n- 무결성 검증: 통과`,
     },
   ],
 };
@@ -389,7 +389,7 @@ function pluginDetailMarkup(p) {
   const samples = (p.sample || []).map((s) => `
     <li><strong>${escapeHtml(s.title)}</strong><p>${escapeHtml(s.text)}</p><span class="src">출처: ${escapeHtml(s.src)}</span></li>`).join("");
   const govLine = p.govTier === "restricted"
-    ? `<p class="md-p gov-reg">이 커넥터는 PII를 포함하므로 토큰화 + 국내·온프레 모델 라우팅 + egress 스캔이 강제됩니다.</p>`
+    ? `<p class="md-p gov-reg">이 커넥터는 PII를 포함하므로 토큰화 + 국내·온프레 모델 라우팅 + 외부 반출 스캔이 강제됩니다.</p>`
     : `<p class="md-p">공개정보 커넥터로 PII가 없어 외부 모델 분석이 허용됩니다.</p>`;
   return `
     <div class="panel-head"><h3>${escapeHtml(p.name)}</h3>${pluginStatusBadge(p.status)}</div>
@@ -466,26 +466,26 @@ function caseDetailPage(caseItem) {
   // 자율운영 타임라인 단계
   const steps = [
     { key: "detect", label: "위험 감지", agent: "Pain Radar Agent", skill: "evidence-harvest", done: true },
-    { key: "evidence", label: "근거 수집(플러그인)", agent: "Evidence Harvest", skill: "source-ranker", done: true },
+    { key: "evidence", label: "근거 수집(플러그인)", agent: "근거 수집", skill: "source-ranker", done: true },
     { key: "analyze", label: "분석·판단", agent: "Cashflow Triage Agent", skill: "cashflow-stress", done: true },
     { key: "match", label: "정책 매칭", agent: "Policy Match Agent", skill: "policy-match", done: true },
     { key: "draft", label: "산출물 초안", agent: "RM Copilot Agent", skill: "notification-brief", done: deliverables.length > 0 },
     { key: "gate", label: "승인 게이트", agent: "Compliance Guard", skill: "approval-gate", done: !isPending },
-    { key: "audit", label: "감사 기록", agent: "Audit Ledger", skill: "audit-ledger", done: !isPending },
+    { key: "audit", label: "감사 기록", agent: "감사 원장", skill: "audit-ledger", done: !isPending },
   ];
   const timeline = steps.map((s, i) => `
     <li class="cd-step ${s.done ? "is-done" : "is-active"}">
       <span class="cd-step-no">${i + 1}</span>
       <div class="cd-step-body">
         <strong>${escapeHtml(s.label)}</strong>
-        <span class="cd-step-meta">${escapeHtml(s.agent)} · 스킬 ${escapeHtml(s.skill)}</span>
+        <span class="cd-step-meta">${escapeHtml(window.agentLabel ? agentLabel(s.agent) : s.agent)} · 스킬 ${escapeHtml(window.skillLabel ? skillLabel(s.skill) : s.skill)}</span>
       </div>
       <span class="cd-step-status">${s.done ? "완료" : "진행 중"}</span>
     </li>`).join("");
 
   const agentCards = agentList.map((a) => `
     <article class="cd-agent">
-      <div><strong>${escapeHtml(a.name)}</strong><span class="cd-agent-role">${escapeHtml(a.role || a.type)}</span></div>
+      <div><strong>${escapeHtml(window.agentLabel ? agentLabel(a) : a.name)}</strong><span class="cd-agent-role">${escapeHtml(a.role || a.type)}</span></div>
       <div class="cd-agent-meta">큐 ${escapeHtml(String(a.queue ?? 0))} · 예산 ${Math.round((a.spent || 0) / 10000)}/${Math.round((a.budget || 0) / 10000)}만원</div>
     </article>`).join("") || `<p class="md-p">배정된 에이전트가 없습니다.</p>`;
 
