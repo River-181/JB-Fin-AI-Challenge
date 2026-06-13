@@ -493,26 +493,37 @@ function tokenStatsView() {
   const totalIn = rows.reduce((s, r) => s + r.input, 0);
   const totalOut = rows.reduce((s, r) => s + r.output, 0);
   const total = totalIn + totalOut;
-  const avg = Math.round(total / rows.length);
   const outRate = total ? Math.round((totalOut / total) * 100) : 0;
-  const series = rows.map((r) => ({ x: r.x, y: r.input + r.output, label: formatTokens(r.input + r.output) }));
+  const inRate = 100 - outRate;
+  const lastTot = rows[rows.length - 1].input + rows[rows.length - 1].output;
+  const prevTot = rows.length > 1 ? rows[rows.length - 2].input + rows[rows.length - 2].output : lastTot;
+  const delta = prevTot ? Math.round(((lastTot - prevTot) / prevTot) * 1000) / 10 : 0;
+  const up = delta >= 0;
+  const series = rows.map((r) => ({ x: r.x, y: r.input + r.output }));
   const tabs = ["daily", "weekly", "monthly"].map((k) =>
-    `<button type="button" class="token-tab ${k === tokenPeriod ? "is-active" : ""}" data-token-period="${k}">${tokenPeriodLabels[k]}</button>`).join("");
+    `<button type="button" class="seg-btn ${k === tokenPeriod ? "is-active" : ""}" data-token-period="${k}">${tokenPeriodLabels[k]}</button>`).join("");
   return `
     <div class="token-stats">
-      <div class="token-tabs">${tabs}</div>
-      <div class="token-summary">
-        ${healthStatLite("총 토큰", formatTokens(total))}
-        ${healthStatLite("입력", formatTokens(totalIn))}
-        ${healthStatLite("출력", `${formatTokens(totalOut)} · ${outRate}%`)}
-        ${healthStatLite(`${tokenPeriodLabels[tokenPeriod]} 평균`, formatTokens(avg))}
+      <div class="token-head">
+        <div class="token-hero">
+          <span class="token-hero-label">총 토큰 · ${tokenPeriodLabels[tokenPeriod]}</span>
+          <div class="token-hero-row">
+            <strong>${formatTokens(total)}</strong>
+            <span class="delta-badge ${up ? "up" : "down"}">${up ? "▲" : "▼"} ${Math.abs(delta)}%</span>
+          </div>
+          <span class="token-hero-sub">최근 구간 ${formatTokens(lastTot)} · 직전 대비</span>
+        </div>
+        <div class="segmented">${tabs}</div>
       </div>
-      ${svgArea(series, { w: 340, h: 130, aria: `${tokenPeriodLabels[tokenPeriod]} 토큰 사용량` })}
-      <p class="insight-copy">${tokenPeriodLabels[tokenPeriod]} 토큰 사용량 추이입니다. 입력 ${outRate ? 100 - outRate : 0}% · 출력 ${outRate}% 비중이며, 비식별·토큰화 처리 후 외부 모델 호출분을 포함합니다.</p>
+      ${svgArea(series, { w: 620, h: 180, valueLabels: false, aria: `${tokenPeriodLabels[tokenPeriod]} 토큰 사용량` })}
+      <div class="io-split">
+        <div class="io-bar"><i class="io-in" style="width:${inRate}%"></i><i class="io-out" style="width:${outRate}%"></i></div>
+        <div class="io-legend">
+          <span class="io-leg"><i class="io-dot in"></i>입력 ${formatTokens(totalIn)} · ${inRate}%</span>
+          <span class="io-leg"><i class="io-dot out"></i>출력 ${formatTokens(totalOut)} · ${outRate}%</span>
+        </div>
+      </div>
     </div>`;
-}
-function healthStatLite(label, value) {
-  return `<div class="token-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
 }
 
 /* =========================================================================
@@ -780,24 +791,45 @@ function svgDonut(value, total, opts) {
   </div>`;
 }
 
+let __chartSeq = 0;
 function svgArea(series, opts) {
   opts = opts || {};
-  const w = opts.w || 320, h = opts.h || 120, pad = 10;
+  const showVals = opts.valueLabels !== false;
+  const stroke = opts.color || "#07569d";
+  const w = opts.w || 600, h = opts.h || 200, padX = 16, padTop = 22, padBot = 28;
   const vals = series.map((s) => s.y);
-  const max = Math.max(...vals), min = Math.min(...vals, 0);
-  const n = series.length, span = (max - min) || 1, base = h - 24;
-  const X = (i) => pad + (n > 1 ? (i / (n - 1)) * (w - 2 * pad) : 0);
-  const Y = (v) => base - ((v - min) / span) * (base - pad);
-  const pts = series.map((s, i) => `${X(i).toFixed(1)},${Y(s.y).toFixed(1)}`);
-  const area = `${pad},${base} ${pts.join(" ")} ${(w - pad).toFixed(1)},${base}`;
+  const rawMax = Math.max(...vals), rawMin = Math.min(...vals);
+  const pad = (rawMax - rawMin) * 0.18 || rawMax * 0.1 || 1;
+  const max = rawMax + pad, min = Math.max(0, rawMin - pad);
+  const n = series.length, span = (max - min) || 1, base = h - padBot;
+  const X = (i) => padX + (n > 1 ? (i / (n - 1)) * (w - 2 * padX) : (w - 2 * padX) / 2);
+  const Y = (v) => padTop + (1 - (v - min) / span) * (base - padTop);
+  const pts = series.map((s, i) => [X(i), Y(s.y)]);
+  // Catmull-Rom → cubic Bézier 평활화
+  let line = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6, c1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6, c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    line += ` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  const areaPath = `${line} L ${pts[n - 1][0].toFixed(1)} ${base} L ${pts[0][0].toFixed(1)} ${base} Z`;
+  const gid = "ga" + (++__chartSeq);
+  const grid = [0.25, 0.5, 0.75].map((f) => { const gy = (padTop + f * (base - padTop)).toFixed(1); return `<line x1="${padX}" y1="${gy}" x2="${w - padX}" y2="${gy}" class="chart-grid"/>`; }).join("");
   const anchor = (i) => (i === 0 ? "start" : i === n - 1 ? "end" : "middle");
-  const dots = series.map((s, i) => `<circle cx="${X(i).toFixed(1)}" cy="${Y(s.y).toFixed(1)}" r="3.2" fill="#07569d"/>`).join("");
-  const labels = series.map((s, i) => `<text x="${X(i).toFixed(1)}" y="${h - 6}" class="chart-ax" text-anchor="${anchor(i)}">${escapeHtml(s.x)}</text>`).join("");
-  const valLabels = series.map((s, i) => `<text x="${X(i).toFixed(1)}" y="${(Y(s.y) - 7).toFixed(1)}" class="chart-val" text-anchor="${anchor(i)}">${escapeHtml(s.label || "")}</text>`).join("");
-  return `<svg viewBox="0 0 ${w} ${h}" class="area-chart" preserveAspectRatio="none" role="img" aria-label="${escapeHtml(opts.aria || "추세")}">
-    <polygon points="${area}" fill="rgba(7,86,157,0.10)"/>
-    <polyline points="${pts.join(" ")}" fill="none" stroke="#07569d" stroke-width="2.2"/>
-    ${dots}${valLabels}${labels}
+  const last = n - 1;
+  const endDot = `<circle cx="${pts[last][0].toFixed(1)}" cy="${pts[last][1].toFixed(1)}" r="6" fill="${stroke}" opacity="0.14"/><circle cx="${pts[last][0].toFixed(1)}" cy="${pts[last][1].toFixed(1)}" r="3.4" fill="${stroke}"/>`;
+  const labels = series.map((s, i) => `<text x="${X(i).toFixed(1)}" y="${h - 8}" class="chart-ax" text-anchor="${anchor(i)}">${escapeHtml(s.x)}</text>`).join("");
+  const valLabels = showVals ? series.map((s, i) => `<text x="${X(i).toFixed(1)}" y="${(Y(s.y) - 9).toFixed(1)}" class="chart-val" text-anchor="${anchor(i)}">${escapeHtml(s.label || "")}</text>`).join("") : "";
+  return `<svg viewBox="0 0 ${w} ${h}" class="area-chart" role="img" aria-label="${escapeHtml(opts.aria || "추세")}">
+    <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${stroke}" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="${stroke}" stop-opacity="0.015"/>
+    </linearGradient></defs>
+    ${grid}
+    <path d="${areaPath}" fill="url(#${gid})"/>
+    <path d="${line}" fill="none" stroke="${stroke}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    ${endDot}${valLabels}${labels}
   </svg>`;
 }
 

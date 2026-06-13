@@ -4788,8 +4788,9 @@ body {
 
 /* 영역 차트 */
 .area-chart { width: 100%; height: auto; display: block; }
-.area-chart .chart-ax { font-size: 9px; fill: var(--muted); }
-.area-chart .chart-val { font-size: 9px; font-weight: 700; fill: var(--blue-700); }
+.area-chart .chart-ax { font-size: 11px; fill: var(--muted); }
+.area-chart .chart-val { font-size: 11px; font-weight: 700; fill: var(--blue-700); }
+.area-chart .chart-grid { stroke: #eef2f7; stroke-width: 1; }
 
 /* 위험도 히스토그램 */
 .histo { display: flex; align-items: flex-end; gap: 12px; height: 110px; padding: 4px 0; }
@@ -4840,13 +4841,32 @@ body {
 .health-stat.health-queue { border-left: 3px solid var(--blue-700); }
 @media (max-width: 640px) { .health-stats { grid-template-columns: repeat(2, 1fr); } }
 
-/* 토큰 사용량 통계 */
-.token-stats { display: flex; flex-direction: column; gap: 12px; }
-.token-tabs { display: inline-flex; gap: 4px; padding: 3px; background: #eef2f7; border-radius: 8px; align-self: flex-start; }
-.token-tab { min-height: 30px; padding: 0 14px; border: none; background: transparent; color: var(--muted); font-weight: 700; font-size: 12px; border-radius: 6px; cursor: pointer; }
-.token-tab.is-active { background: #fff; color: var(--blue-700); box-shadow: 0 1px 2px rgba(7,86,157,0.12); }
-.token-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.token-stat { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 8px; background: #f7f9fc; border: 1px solid #eef2f7; border-left: 3px solid var(--blue-700); }
-.token-stat span { font-size: 11px; color: var(--muted); font-weight: 700; }
-.token-stat strong { font-size: 18px; color: var(--ink); }
-@media (max-width: 640px) { .token-summary { grid-template-columns: repeat(2, 1fr); } }
+/* 토큰 사용량 통계 — SaaS 분석 카드 */
+.token-stats { display: flex; flex-direction: column; gap: 14px; }
+.token-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.token-hero { display: flex; flex-direction: column; gap: 2px; }
+.token-hero-label { font-size: 12px; color: var(--muted); font-weight: 700; }
+.token-hero-row { display: flex; align-items: baseline; gap: 10px; }
+.token-hero-row strong { font-size: 34px; line-height: 1; color: var(--ink); letter-spacing: -0.5px; }
+.token-hero-sub { font-size: 12px; color: var(--muted); }
+.delta-badge { font-size: 12px; font-weight: 800; padding: 3px 9px; border-radius: 999px; }
+.delta-badge.up { color: #0f8f72; background: #e6f7f0; }
+.delta-badge.down { color: #c0322a; background: #fdecea; }
+
+/* 세그먼트 컨트롤 (재사용 가능) */
+.segmented { display: inline-flex; gap: 3px; padding: 3px; background: #eef2f7; border-radius: 9px; }
+.seg-btn { min-height: 30px; padding: 0 14px; border: none; background: transparent; color: var(--muted); font-weight: 700; font-size: 12px; border-radius: 7px; cursor: pointer; transition: background .12s, color .12s; }
+.seg-btn:hover { color: var(--ink); }
+.seg-btn.is-active { background: #fff; color: var(--blue-700); box-shadow: 0 1px 3px rgba(7,86,157,0.16); }
+
+/* 입력/출력 분할 바 */
+.io-split { display: flex; flex-direction: column; gap: 8px; }
+.io-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: #eef2f7; }
+.io-bar i { display: block; height: 100%; }
+.io-bar .io-in { background: var(--blue-700); }
+.io-bar .io-out { background: #4aa3e8; }
+.io-legend { display: flex; gap: 18px; flex-wrap: wrap; }
+.io-leg { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #2b3a4f; font-weight: 600; }
+.io-dot { width: 9px; height: 9px; border-radius: 3px; }
+.io-dot.in { background: var(--blue-700); }
+.io-dot.out { background: #4aa3e8; }
