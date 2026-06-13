@@ -28,9 +28,15 @@
 - P5 일관성 정합(데크 통계·KPI·표시명·히어로 정정, 옛 초안 deprecated, 앱 반영).
 - P6 데크 PPTX 아티팩트 패치 + e2e 19/19 + 최종 검증.
 
+## PDF 변환 환경 (검증된 사실)
+이 환경에는 **PPTX→PDF 도구(soffice/libreoffice) 없음**, pandoc은 있으나 **PDF 엔진(LaTeX/weasyprint/typst) 없음** → **이 환경에서 PDF 직접 생성 불가**(가정 아님, 확인됨).
+대신 사용자가 한 단계로 PDF화할 수 있는 아티팩트를 `05_제출/제출본/`에 생성:
+- `JB_LocalGuard_OS_MVP제안서.docx` (Word→PDF) · 데크 `proposal/*.pptx` (PowerPoint/Keynote→PDF)
+- `JB_LocalGuard_OS_기능명세서.docx` + `.html` (Word/브라우저 인쇄→PDF)
+**제출 전 필수**: ① 데크 PPTX를 PowerPoint/Keynote로 열어 슬라이드 3·7·8 정정 텍스트 줄바꿈/넘침 육안 확인 후 PDF 내보내기 ② 기능명세서 PDF 페이지 수(3p 권장) 확인.
+
 ## 남은 선택 사항 (사용자 판단)
-- **시연영상**(선택, +5점): `05_제출/03-발표-시연-스크립트.md` 스크립트 준비됨. **공개 검색노출 플랫폼 업로드 금지** 유의.
-- **PDF 변환**: 제안서 데크(PPTX)·기능명세서(MD)를 PDF로 내보내 제출. (현재 환경에 LibreOffice 미확인 — 수동/로컬 변환 권장)
+- **시연영상**(선택, +5점): `05_제출/03-발표-시연-스크립트.md` 준비됨. **공개 검색노출 플랫폼 업로드 금지**.
 - **미검증 통계**([미검증] 표기): 제출 직전 원문 재확인 또는 제외.
-- **template.pptx 부재**: 데크는 기존 아티팩트를 정정 패치함(소스 build_proposal.py도 정정 완료). 재생성하려면 로컬 `proposal/template.pptx` 필요(gitignored).
+- **template.pptx 부재**: 데크 소스(build_proposal.py)·아티팩트(PPTX) 모두 정정 완료. 전체 재생성하려면 로컬 `proposal/template.pptx` 필요(gitignored).
 - **remote push**: 기존 결정대로 **미실행**.
