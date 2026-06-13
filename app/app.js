@@ -75,7 +75,7 @@ const evidence = [
     source: "금융위원회",
     url: "https://www.fsc.go.kr/no010101/86063",
     implication:
-      "딥페이크와 음성변조 등 AI 악용 사기에 대해 사기 차단 에이전트가 외부 경보를 연결해야 한다.",
+      "딥페이크와 음성변조 등 AI 악용 사기에 대해 이상거래 탐지·차단 에이전트가 외부 경보를 연결해야 한다.",
   },
   {
     id: "digital-gap",
@@ -528,7 +528,7 @@ const initialCases = [
     ],
     agents: ["fraud", "compliance", "orchestrator"],
     transcript: [
-      "사기 차단 에이전트: 긴급 송금 요청과 콜백 URL이 결합되어 고위험입니다.",
+      "이상거래 탐지·차단 에이전트: 긴급 송금 요청과 콜백 URL이 결합되어 고위험입니다.",
       "로컬가드 오케스트레이터: 외부 고객 접촉은 차단하고 내부 상위 검토만 허용합니다.",
     ],
     audit: [
@@ -625,7 +625,7 @@ const goals = [
   ["Triage time", "RM이 원인과 다음 행동을 파악하는 시간을 50% 단축", 64],
   ["Evidence traceability", "에이전트 판단 100%에 근거 링크 또는 내부 이벤트 연결", 91],
   ["Approval safety", "고객 대상 행동 100% 승인 게이트 통과", 100],
-  ["Fraud block", "고위험 사기 케이스 외부 발송 차단", 100],
+  ["Followup care", "사후관리 누락 0건 · 후속 태스크 자동 등록 (고위험 사기 외부 발송도 자동 차단)", 100],
   ["Jeonse safe-contract", "전세 위험 케이스 100%에 권리관계/보증보험/은행 연계 체크리스트 연결", 86],
 ];
 
@@ -1043,7 +1043,7 @@ function localizeLine(text) {
     "Triage time": "분류 시간 단축",
     "Evidence traceability": "근거 추적성",
     "Approval safety": "승인 안전성",
-    "Fraud block": "사기 차단",
+    "Followup care": "사후관리 완결성",
     "Jeonse safe-contract": "전세 안전계약",
   };
   if (exact[value]) return exact[value];
