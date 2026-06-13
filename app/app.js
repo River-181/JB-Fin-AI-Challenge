@@ -1796,6 +1796,7 @@ function budgetPage() {
   return `
     ${pageHeader("비용", "비용과 효과", "에이전트별 예산뿐 아니라 예상 비용, 절감 가능 비용, 비용 대비 효과를 함께 봅니다.")}
     ${panelMarkup("비용 요약", "월간 비용 판단", dashboardCostView(), "cost-panel")}
+    ${panelMarkup("토큰 사용량", "일간·주간·월간 토큰 통계", tokenStatsView(), "token-panel")}
     ${panelMarkup("월별 추세", "비용 변화", dashboardTrendView(), "trend-panel")}
     ${panelMarkup("비용 사용률", "에이전트별 사용률", budgetView())}
   `;

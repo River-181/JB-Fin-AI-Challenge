@@ -450,6 +450,70 @@ function skillSources(slug) {
 let selectedPluginId = null;
 let docView = null; // 공용 문서 뷰어 (산출물·스킬 본문 등): {eyebrow,title,body,footL,footR}
 let skillEditMode = false;
+let tokenPeriod = "daily"; // 토큰 통계 기간: daily | weekly | monthly
+
+/* =========================================================================
+ * 토큰 사용량 통계 (일간/주간/월간) — input/output 토큰
+ * ========================================================================= */
+const tokenUsage = {
+  daily: [
+    { x: "6/08", input: 302000, output: 121000 },
+    { x: "6/09", input: 358000, output: 142000 },
+    { x: "6/10", input: 331000, output: 138000 },
+    { x: "6/11", input: 402000, output: 167000 },
+    { x: "6/12", input: 377000, output: 151000 },
+    { x: "6/13", input: 438000, output: 182000 },
+    { x: "6/14", input: 351000, output: 144000 },
+  ],
+  weekly: [
+    { x: "5월 2주", input: 1980000, output: 820000 },
+    { x: "5월 3주", input: 2110000, output: 880000 },
+    { x: "5월 4주", input: 2240000, output: 910000 },
+    { x: "6월 1주", input: 2360000, output: 980000 },
+    { x: "6월 2주", input: 2280000, output: 940000 },
+    { x: "6월 3주", input: 2520000, output: 1040000 },
+  ],
+  monthly: [
+    { x: "3월", input: 5900000, output: 2300000 },
+    { x: "4월", input: 6900000, output: 2700000 },
+    { x: "5월", input: 8700000, output: 3400000 },
+    { x: "6월", input: 9600000, output: 3800000 },
+  ],
+};
+const tokenPeriodLabels = { daily: "일간", weekly: "주간", monthly: "월간" };
+
+function formatTokens(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
+  if (n >= 1000) return Math.round(n / 1000) + "K";
+  return String(n);
+}
+
+function tokenStatsView() {
+  const rows = tokenUsage[tokenPeriod] || tokenUsage.daily;
+  const totalIn = rows.reduce((s, r) => s + r.input, 0);
+  const totalOut = rows.reduce((s, r) => s + r.output, 0);
+  const total = totalIn + totalOut;
+  const avg = Math.round(total / rows.length);
+  const outRate = total ? Math.round((totalOut / total) * 100) : 0;
+  const series = rows.map((r) => ({ x: r.x, y: r.input + r.output, label: formatTokens(r.input + r.output) }));
+  const tabs = ["daily", "weekly", "monthly"].map((k) =>
+    `<button type="button" class="token-tab ${k === tokenPeriod ? "is-active" : ""}" data-token-period="${k}">${tokenPeriodLabels[k]}</button>`).join("");
+  return `
+    <div class="token-stats">
+      <div class="token-tabs">${tabs}</div>
+      <div class="token-summary">
+        ${healthStatLite("총 토큰", formatTokens(total))}
+        ${healthStatLite("입력", formatTokens(totalIn))}
+        ${healthStatLite("출력", `${formatTokens(totalOut)} · ${outRate}%`)}
+        ${healthStatLite(`${tokenPeriodLabels[tokenPeriod]} 평균`, formatTokens(avg))}
+      </div>
+      ${svgArea(series, { w: 340, h: 130, aria: `${tokenPeriodLabels[tokenPeriod]} 토큰 사용량` })}
+      <p class="insight-copy">${tokenPeriodLabels[tokenPeriod]} 토큰 사용량 추이입니다. 입력 ${outRate ? 100 - outRate : 0}% · 출력 ${outRate}% 비중이며, 비식별·토큰화 처리 후 외부 모델 호출분을 포함합니다.</p>
+    </div>`;
+}
+function healthStatLite(label, value) {
+  return `<div class="token-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
+}
 
 /* =========================================================================
  * 01 · 케이스 상세 페이지 (자율운영 뷰)
@@ -649,6 +713,9 @@ function bindModuleActions() {
     const label = (window.skillLabel ? skillLabel(slug) : slug);
     if (body) openDoc({ eyebrow: "스킬 운영 콘텐츠", title: label, body });
   });
+
+  // 토큰 통계 기간 토글
+  click("[data-token-period]", (el) => { tokenPeriod = el.dataset.tokenPeriod; if (window.render) render(); });
 
   // 뷰 점프 / 케이스 상세 진입
   click("[data-view-jump]", (el) => { activeView = el.dataset.viewJump; if (window.render) render(); });

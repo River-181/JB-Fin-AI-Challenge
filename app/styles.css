@@ -4839,3 +4839,14 @@ body {
 .health-stat.health-idle { border-left: 3px solid #8796aa; }
 .health-stat.health-queue { border-left: 3px solid var(--blue-700); }
 @media (max-width: 640px) { .health-stats { grid-template-columns: repeat(2, 1fr); } }
+
+/* 토큰 사용량 통계 */
+.token-stats { display: flex; flex-direction: column; gap: 12px; }
+.token-tabs { display: inline-flex; gap: 4px; padding: 3px; background: #eef2f7; border-radius: 8px; align-self: flex-start; }
+.token-tab { min-height: 30px; padding: 0 14px; border: none; background: transparent; color: var(--muted); font-weight: 700; font-size: 12px; border-radius: 6px; cursor: pointer; }
+.token-tab.is-active { background: #fff; color: var(--blue-700); box-shadow: 0 1px 2px rgba(7,86,157,0.12); }
+.token-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.token-stat { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 8px; background: #f7f9fc; border: 1px solid #eef2f7; border-left: 3px solid var(--blue-700); }
+.token-stat span { font-size: 11px; color: var(--muted); font-weight: 700; }
+.token-stat strong { font-size: 18px; color: var(--ink); }
+@media (max-width: 640px) { .token-summary { grid-template-columns: repeat(2, 1fr); } }
