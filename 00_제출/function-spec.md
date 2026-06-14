@@ -52,22 +52,9 @@
 
 ## 4. 주요 기능 흐름도 (Flow)
 
-```mermaid
-flowchart TD
-  A["케이스 선택 / 자연어 지시"] --> B["AgentRun 생성"]
-  B --> C["판단: 위험 분해 · 근거 · confidence"]
-  C --> D["행동 초안: 콜백/체크리스트/메모"]
-  D --> E{"외부 LLM 필요?"}
-  E -->|예| G["거버넌스: PII 토큰화 → 반출 스캔"]
-  E -->|아니오| F
-  G --> F["검증: 준법 검토(과장·PII·표현)"]
-  F --> H{"Approval Gate"}
-  H -->|승인| I["Approved → 산출물/조치 준비"]
-  H -->|반려/차단| J["Escalation / 외부 접촉 차단"]
-  I --> K["Audit Ledger 기록"]
-  J --> K
-  K --> L["Properties/Activity 갱신 + 사후관리 큐"]
-```
+![주요 기능 흐름도 (단계별)](../02_제품/자산/diagrams/feature-flow.png)
+
+> ① 접수 → ② 판단 → ③ 행동·거버넌스(외부 LLM 필요 시 PII 토큰화→반출 스캔) → ④ 검증·승인(준법 검토→Approval Gate, 반려 시 Escalation·외부 접촉 차단) → ⑤ 기록·후속(Audit Ledger→Properties 갱신·사후관리 큐). 편집 원본: [`feature-flow.mmd`](../02_제품/자산/diagrams/feature-flow.mmd)
 
 외부 LLM 호출 구간의 PII 비반출 4중 방어:
 
