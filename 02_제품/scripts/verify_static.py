@@ -3,7 +3,7 @@ import json
 import subprocess
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 required = [
     ROOT / "package.json",
@@ -17,8 +17,8 @@ required = [
     ROOT / "03_에이전트/README.md",
     ROOT / "04_아키텍처/README.md",
     ROOT / "_체계/README.md",
-    ROOT / "자산/README.md",
-    ROOT / "산출/README.md",
+    ROOT / "02_제품/자산/README.md",
+    ROOT / "06_증빙/산출/README.md",
     ROOT / "07_원천/pdf-read.md",
     ROOT / "07_원천/daker-page-line-read.md",
     ROOT / "05_리서치/pain-point-evidence.md",
@@ -31,30 +31,30 @@ required = [
     ROOT / "00_제출/mvp-proposal-draft.md",
     ROOT / "00_제출/evaluation-fit.md",
     ROOT / "06_증빙/source-index.md",
-    ROOT / "app/README.md",
-    ROOT / "app/index.html",
-    ROOT / "app/styles.css",
-    ROOT / "app/app.js",
-    ROOT / "scripts/README.md",
+    ROOT / "02_제품/app/README.md",
+    ROOT / "02_제품/app/index.html",
+    ROOT / "02_제품/app/styles.css",
+    ROOT / "02_제품/app/app.js",
+    ROOT / "02_제품/scripts/README.md",
     ROOT / ".omc/decisions.md",
-    ROOT / "산출/final-product-stabilization-report-20260613.md",
-    ROOT / "산출/judging-ready-service-report-20260613.md",
-    ROOT / "산출/ui-density-alignment-report-20260613.md",
+    ROOT / "06_증빙/산출/final-product-stabilization-report-20260613.md",
+    ROOT / "06_증빙/산출/judging-ready-service-report-20260613.md",
+    ROOT / "06_증빙/산출/ui-density-alignment-report-20260613.md",
 ]
 
 missing = [path for path in required if not path.exists()]
 if missing:
     raise SystemExit("Missing files:\n" + "\n".join(str(path) for path in missing))
 
-html = (ROOT / "app/index.html").read_text(encoding="utf-8")
-css = (ROOT / "app/styles.css").read_text(encoding="utf-8")
-js = (ROOT / "app/app.js").read_text(encoding="utf-8")
+html = (ROOT / "02_제품/app/index.html").read_text(encoding="utf-8")
+css = (ROOT / "02_제품/app/styles.css").read_text(encoding="utf-8")
+js = (ROOT / "02_제품/app/app.js").read_text(encoding="utf-8")
 package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
 
 required_scripts = {
-    "dev": "python3 -m http.server 8000 --directory app",
-    "build": "python3 scripts/verify_static.py",
-    "test": "python3 scripts/verify_static.py",
+    "dev": "python3 -m http.server 8000 --directory 02_제품/app",
+    "build": "python3 02_제품/scripts/verify_static.py",
+    "test": "python3 02_제품/scripts/verify_static.py",
     "test:e2e": "playwright test",
 }
 for name, command in required_scripts.items():
@@ -191,7 +191,7 @@ if "Pretendard" not in css:
     raise SystemExit("CSS should use Pretendard as the primary font")
 
 node_check = subprocess.run(
-    ["node", "--check", str(ROOT / "app/app.js")],
+    ["node", "--check", str(ROOT / "02_제품/app/app.js")],
     text=True,
     capture_output=True,
     check=False,

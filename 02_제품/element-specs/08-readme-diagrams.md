@@ -9,7 +9,7 @@ GitHub에서 README만 봐도 (1) 구조를 다이어그램으로 이해 (2) 상
 1. **아키텍처 다이어그램 이미지** (Excalidraw로 작도 → PNG 캡처)
    - 시스템 구조: Case → AgentRun → Agent → Skill → Plugin(법령/정책/뉴스/JB DB) → Governance → Approval → Audit
    - 데이터 거버넌스 흐름: 원본 PII → 토큰화 → 모델 라우팅(국내/외부) → 외부 반출 제한 → 감사
-   - 저장: `자산/diagrams/*.png`, README에 `![](./경로)` 임베드
+   - 저장: `자산/diagrams/*.png`, README에 `![](경로)` 임베드
 2. **실제 작동 스크린샷**: 대시보드, 케이스 상세(자율운영), 플러그인, 거버넌스 패널, 산출물 뷰어 → `자산/screenshots/*.png`
 3. **상세 설치/실행법**:
    - 사전 요구(Python3 / Node 18+ for e2e), clone, `npm install`
