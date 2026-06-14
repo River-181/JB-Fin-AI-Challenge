@@ -24,22 +24,9 @@
 
 ## 2. 시스템 구성도 (Architecture)
 
-```mermaid
-flowchart LR
-  User["RM/준법/리스크 담당자"] --> UI["Web Console (4-zone)"]
-  UI --> Router["Workspace Router"]
-  Router --> Runtime["Case Runtime (app.js 상태)"]
-  Runtime --> Orchestrator["운영 조율 에이전트"]
-  Orchestrator --> Mesh["전문 Agent 메시 (14종)"]
-  Mesh --> Skills["Skill Registry (25종)"]
-  Mesh --> Gov["데이터 거버넌스 게이트<br/>등급제·토큰화·모델 라우팅·반출 스캔"]
-  Gov --> Ext["외부 LLM (토큰 입력만)"]
-  Gov --> OnPrem["국내·온프레 모델 (원본 PII)"]
-  Mesh --> Evidence["Evidence Store"]
-  Mesh --> Approval["Approval Gate"]
-  Approval --> Audit["Audit Ledger (무결성 해시)"]
-  Audit --> UI
-```
+![시스템 구성도 (추상)](../02_제품/자산/diagrams/system-architecture.png)
+
+> **사용자 → 운영 콘솔(4-zone) → 케이스 런타임·오케스트레이터 → 전문 에이전트 14·스킬 25 → 데이터 거버넌스 게이트(★차별점) → 모델**(국내·온프레=원본 PII / 외부 LLM=토큰만). 에이전트는 근거 커넥터(플러그인/MCP 6)를 조회하고, 모든 판단·행동·반출은 **기록·통제**(Evidence·Approval L0–L4·Audit 해시)에 남는다. 전 컴포넌트 전개도는 [부록 E. 상세 시스템 구성도](#e-상세-시스템-구성도-전-컴포넌트) 참조. 편집 원본: [`.mmd`](../02_제품/자산/diagrams/system-architecture.mmd)
 
 - **4-zone UI**: Sidebar(내비) / Topbar(지시·검색) / Workbench(대시보드·케이스·승인·전세·플러그인 등) / Properties(케이스·근거·감사 맥락).
 - **거버넌스 게이트**는 모든 외부 LLM·플러그인 조회의 관문(차별점). 상세: [`04_아키텍처/`](../04_아키텍처/README.md), [`02_제품/element-specs/07-data-governance-pii.md`](../02_제품/element-specs/07-data-governance-pii.md).
@@ -65,22 +52,9 @@ flowchart LR
 
 ## 4. 주요 기능 흐름도 (Flow)
 
-```mermaid
-flowchart TD
-  A["케이스 선택 / 자연어 지시"] --> B["AgentRun 생성"]
-  B --> C["판단: 위험 분해 · 근거 · confidence"]
-  C --> D["행동 초안: 콜백/체크리스트/메모"]
-  D --> E{"외부 LLM 필요?"}
-  E -->|예| G["거버넌스: PII 토큰화 → 반출 스캔"]
-  E -->|아니오| F
-  G --> F["검증: 준법 검토(과장·PII·표현)"]
-  F --> H{"Approval Gate"}
-  H -->|승인| I["Approved → 산출물/조치 준비"]
-  H -->|반려/차단| J["Escalation / 외부 접촉 차단"]
-  I --> K["Audit Ledger 기록"]
-  J --> K
-  K --> L["Properties/Activity 갱신 + 사후관리 큐"]
-```
+![주요 기능 흐름도 (단계별)](../02_제품/자산/diagrams/feature-flow.png)
+
+> ① 접수 → ② 판단 → ③ 행동·거버넌스(외부 LLM 필요 시 PII 토큰화→반출 스캔) → ④ 검증·승인(준법 검토→Approval Gate, 반려 시 Escalation·외부 접촉 차단) → ⑤ 기록·후속(Audit Ledger→Properties 갱신·사후관리 큐). 편집 원본: [`feature-flow.mmd`](../02_제품/자산/diagrams/feature-flow.mmd)
 
 외부 LLM 호출 구간의 PII 비반출 4중 방어:
 
@@ -122,6 +96,13 @@ Case(작업 단위)·AgentRun(실행 기록)·Skill(장착 처리능력)·Eviden
 
 ### D. 검증 방법
 `python3 02_제품/scripts/verify_static.py`, `node --check 02_제품/app/app.js`, Playwright E2E 19종, 골든 패스 3종 데모.
+
+### E. 상세 시스템 구성도 (전 컴포넌트)
+§2의 추상 구성도를 전 컴포넌트 수준으로 전개한 도면. 계층별 색 코딩(사용자·UI·서버/런타임·에이전트·스킬·거버넌스·데이터·모델·외부 커넥터)으로, 현재 정적 MVP 범위와 본선 승격 목표(REST API·DB+ORM)를 함께 표기한다.
+
+![상세 시스템 구성도](../02_제품/자산/diagrams/system-architecture-full.png)
+
+> 편집 가능 원본: [`system-architecture-full.mmd`](../02_제품/자산/diagrams/system-architecture-full.png) · 렌더: `node 02_제품/scripts/render_mermaid.mjs <in.mmd> <out.png> 3 classic`
 
 ---
 
