@@ -24,7 +24,7 @@ JB금융그룹 Fin:AI Challenge · 자유주제 (JB 미래사업 AI)
 
 ## 작동 구조 — Case에서 Audit까지
 
-![운영 루프](자산/diagrams/system-loop.png)
+![운영 루프](02_제품/자산/diagrams/system-loop.png)
 
 `Case → AgentRun → Agent → Skill → Evidence → Governance → Approval → Audit` — 정적 분석 보고서가 아니라 **상태가 실제로 변하는 운영 루프**다. 데모(`?demo=sme/jeonse/phishing`)에서 케이스 선택·실행·승인·감사 로그 갱신이 클릭으로 재현된다.
 
@@ -32,7 +32,7 @@ JB금융그룹 Fin:AI Challenge · 자유주제 (JB 미래사업 AI)
 
 ## 핵심 차별점 — 데이터 거버넌스 (PII 비반출)
 
-![데이터 거버넌스 4중 방어](자산/diagrams/governance-4defense.png)
+![데이터 거버넌스 4중 방어](02_제품/자산/diagrams/governance-4defense.png)
 
 | 단계 | 무엇을 | 어떻게 |
 | --- | --- | --- |
@@ -41,13 +41,13 @@ JB금융그룹 Fin:AI Challenge · 자유주제 (JB 미래사업 AI)
 | ③ 모델 라우팅 | 민감도로 분기 | 원본 PII → 국내·온프레 모델 / 비식별 요약 → 외부 LLM(토큰만) |
 | ④ 반출 스캔 + 감사 원장 | 외부 전송 사전 검사·기록 | 주민번호·계좌·전화 패턴 + 토큰 검증, 무결성 해시 기록 |
 
-**법적 근거(검증 완료)** — 은행은 **신용정보법 §40조의2**(특별법 우선, §3조의2), 개인정보보호법 **§28조의4·§28조의5** 보충, **전자금융감독규정 §15조(망분리)**. 금융위 **망분리 개선 로드맵(2024-08-13, 다층보안체계·생성형 AI 클라우드 허용)**. → [근거 검증 문서](06_증빙/legal-citation-verification.md) · [편집 가능 Excalidraw](자산/diagrams/governance-4defense.excalidraw.url)
+**법적 근거(검증 완료)** — 은행은 **신용정보법 §40조의2**(특별법 우선, §3조의2), 개인정보보호법 **§28조의4·§28조의5** 보충, **전자금융감독규정 §15조(망분리)**. 금융위 **망분리 개선 로드맵(2024-08-13, 다층보안체계·생성형 AI 클라우드 허용)**. → [근거 검증 문서](06_증빙/legal-citation-verification.md) · [편집 가능 Excalidraw](02_제품/자산/diagrams/governance-4defense.excalidraw.url)
 
 ---
 
 ## 에이전트 팀 구성
 
-![에이전트 조직](자산/diagrams/agent-org.png)
+![에이전트 조직](02_제품/자산/diagrams/agent-org.png)
 
 | 라인 | 에이전트 |
 | --- | --- |
@@ -65,13 +65,13 @@ JB금융그룹 Fin:AI Challenge · 자유주제 (JB 미래사업 AI)
 
 | 대시보드 | 케이스 자율운영 상세 |
 | --- | --- |
-| ![대시보드](자산/screenshots/upgrade/01-dashboard.png) | ![케이스 상세](자산/screenshots/upgrade/02-case-detail.png) |
+| ![대시보드](02_제품/자산/screenshots/upgrade/01-dashboard.png) | ![케이스 상세](02_제품/자산/screenshots/upgrade/02-case-detail.png) |
 
 | 플러그인·MCP 커넥터 | 데이터 거버넌스(PII 토큰화) |
 | --- | --- |
-| ![플러그인](자산/screenshots/upgrade/04-plugins.png) | ![거버넌스](자산/screenshots/upgrade/05-governance.png) |
+| ![플러그인](02_제품/자산/screenshots/upgrade/04-plugins.png) | ![거버넌스](02_제품/자산/screenshots/upgrade/05-governance.png) |
 
-> 산출물(MD) 뷰어: ![산출물](자산/screenshots/upgrade/03-deliverable.png)
+> 산출물(MD) 뷰어: ![산출물](02_제품/자산/screenshots/upgrade/03-deliverable.png)
 
 ---
 
@@ -94,7 +94,7 @@ git clone https://github.com/LSB-afk/JB-Fin-AI-Challenge.git
 cd JB-Fin-AI-Challenge
 npm install                     # Playwright 등 (검증용)
 
-npm run dev                     # = cd app && python3 -m http.server 8000
+npm run dev                     # = python3 -m http.server 8000 --directory 02_제품/app
 # http://127.0.0.1:8000/index.html
 ```
 
@@ -115,22 +115,29 @@ npm run test:e2e    # Playwright E2E (19개 시나리오·반응형)
 
 ## 저장소 구성
 
+최상위는 **번호 폴더(00–07) + `_체계`**로만 구성된다. 제품 소스·검증 도구·자산은 `02_제품/` 안에, 발표 데크는 `00_제출/`, 작업 리포트는 `06_증빙/` 안에 정리되어 있다.
+
 ```
 JB-Fin-AI-Challenge/
-├── README.md / _MOC.md / _canon.md   # 관문 · 탐색 지도 · 사실 단일 출처(SSOT)
-├── app/                  🟦 제품 MVP 소스코드 (정적 vanilla JS)
-├── 00_제출/             🟦 제출물 — MVP 제안서·기능명세서·통계·발표·체크리스트·제출본(DOCX)
-├── 01_전략/             문제정의·JB 사업연계·경쟁차별성·자유주제 포지셔닝
-├── 02_제품/             화면별 기능명세·사용자스토리·IA·로드맵·element-specs·히어로 워크스루
-├── 03_에이전트/         에이전트 프롬프트 계약·모델 라우팅/거버넌스·안전정책·시스템 설계
-├── 04_아키텍처/         시스템·데이터·API·사용자흐름·거버넌스 Mermaid 다이어그램
-├── 05_리서치/           Pain-point·JB 사업·데이터/API/라이선스 (출처 검증)
-├── 06_증빙/             심사 인용카드·법령정책 근거·증빙추적·법령 검증·출처 인덱스
-├── 07_원천/             대회 PDF·DAKER 정독 노트
-├── 발표자료/            발표 데크 빌더(PPTX) + Mermaid·스크린샷
-├── 자산/                스크린샷·다이어그램   ·   산출/   작업 로그·리포트
-└── scripts/ tests/      정적 검증 · Playwright E2E
+├── README.md · _MOC.md · _canon.md   # 관문 · 탐색 지도 · 사실 단일 출처(SSOT)
+├── 00_제출/        🟦 제출물 — 제안서·기능명세서·통계·발표스크립트·제출본(DOCX)
+│   └── 발표자료/       발표 데크 빌더(PPTX) + Mermaid·스크린샷
+├── 01_전략/        문제정의·JB 사업연계·경쟁차별성·자유주제 포지셔닝
+├── 02_제품/        제품·실행·검증
+│   ├── app/            🟦 MVP 소스코드 (정적 vanilla JS)
+│   ├── 자산/           스크린샷·손그림 다이어그램·시연 녹화
+│   ├── scripts/        정적 검증 (verify_static.py)
+│   ├── tests/          Playwright E2E (19 시나리오)
+│   └── *.md            화면별 기능명세·사용자스토리·IA·로드맵·element-specs·히어로 워크스루
+├── 03_에이전트/    에이전트 프롬프트 계약·모델 라우팅/거버넌스·안전정책·시스템 설계
+├── 04_아키텍처/    시스템·데이터·API·거버넌스 Mermaid 다이어그램
+├── 05_리서치/      Pain-point·JB 사업·데이터/API/라이선스 (출처 검증)
+├── 06_증빙/        심사 인용카드·법령정책 근거·증빙추적·법령 검증·출처 인덱스
+│   └── 산출/           작업 로그·QA 리포트
+├── 07_원천/        대회 PDF·DAKER 정독 노트
+└── _체계/          운영 규칙 · 심사기준
 ```
+> `node_modules/`·`test-results/`는 npm/Playwright 생성물이라 `.gitignore` 처리되어 저장소에 포함되지 않는다.
 
 ---
 
@@ -139,7 +146,7 @@ JB-Fin-AI-Challenge/
 1. [`_canon.md`](_canon.md) — 제품·차별점·심사 25항목을 한눈에
 2. [`00_제출/mvp-proposal.md`](00_제출/mvp-proposal.md) — MVP 제안서(공식 7섹션, 부록 A = 25항목 커버리지 맵)
 3. [`00_제출/function-spec.md`](00_제출/function-spec.md) — 기능명세서(공식 6파트)
-4. [`app/index.html`](app/index.html) → `?demo=sme` 전주 카페 골든 패스 실행
+4. [`app/index.html`](02_제품/app/index.html) → `?demo=sme` 전주 카페 골든 패스 실행
 5. [`04_아키텍처/`](04_아키텍처/README.md) — 데이터 거버넌스 아키텍처(PII 비반출)
 
 전체 지도: [`_MOC.md`](_MOC.md)
@@ -171,6 +178,6 @@ PoC(현재) → 파일럿(1개 영업본부 RM) → 내부 적용(사후관리·
 
 <div align="center">
 
-[MVP 제안서](00_제출/mvp-proposal.md) · [기능명세서](00_제출/function-spec.md) · [Canon](_canon.md) · [MOC](_MOC.md) · [앱 실행](app/index.html)
+[MVP 제안서](00_제출/mvp-proposal.md) · [기능명세서](00_제출/function-spec.md) · [Canon](_canon.md) · [MOC](_MOC.md) · [앱 실행](02_제품/app/index.html)
 
 </div>

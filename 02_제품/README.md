@@ -49,18 +49,18 @@
 
 ## 본문 문서
 
-- [01 화면별 기능 명세](./01-화면별-기능명세.md) — 내비 15개 화면 중 핵심 화면의 목적·핵심 요소·사용자 행동·연결 함수·승인 레벨
-- [02 사용자 스토리](./02-사용자스토리.md) — 전주 카페·전세·보이스피싱 골든 패스별 스토리와 인수 기준
-- [03 정보구조 IA](./03-정보구조-IA.md) — 내비게이션 트리, 4-zone 레이아웃, Case→…→Audit 객체 모델과 화면 매핑
-- [04 제품 로드맵](./04-제품-로드맵.md) — MVP(현재) → 본선 고도화 → PoC·파일럿·내부 적용·상용 발전 경로
+- [01 화면별 기능 명세](01-화면별-기능명세.md) — 내비 15개 화면 중 핵심 화면의 목적·핵심 요소·사용자 행동·연결 함수·승인 레벨
+- [02 사용자 스토리](02-사용자스토리.md) — 전주 카페·전세·보이스피싱 골든 패스별 스토리와 인수 기준
+- [03 정보구조 IA](03-정보구조-IA.md) — 내비게이션 트리, 4-zone 레이아웃, Case→…→Audit 객체 모델과 화면 매핑
+- [04 제품 로드맵](04-제품-로드맵.md) — MVP(현재) → 본선 고도화 → PoC·파일럿·내부 적용·상용 발전 경로
 
 ## 연결 문서 및 앱
 
-- [실행 앱](../app/index.html)
-- [앱 설명](../app/README.md)
-- [PRD](./prd.md)
-- [기능 명세](./function-spec.md)
-- [HagentOS UI 적용 문서](./hagentos-ui-adaptation.md)
+- [실행 앱](app/index.html)
+- [앱 설명](app/README.md)
+- [PRD](prd.md)
+- [기능 명세](function-spec.md)
+- [HagentOS UI 적용 문서](hagentos-ui-adaptation.md)
 - [Agent 시스템](../03_에이전트/agent-system.md)
 - [Jeonse Shield Agents](../03_에이전트/jeonse-shield-agents.md)
 

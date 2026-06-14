@@ -17,17 +17,17 @@
 
 ## 원천 자료
 
-- [PDF 정독 노트](../07_원천/pdf-read.md)
-- [DAKER 페이지 정독 노트](../07_원천/daker-page-line-read.md)
-- [출처 인덱스](../06_증빙/source-index.md)
+- [PDF 정독 노트](../../07_원천/pdf-read.md)
+- [DAKER 페이지 정독 노트](../../07_원천/daker-page-line-read.md)
+- [출처 인덱스](../../06_증빙/source-index.md)
 
 ## 설계 자산
 
-- [PRD](../02_제품/prd.md)
-- [기능 명세](../02_제품/function-spec.md)
-- [Agent 시스템](../03_에이전트/agent-system.md)
-- [Skill Registry](../03_에이전트/skill-registry.md)
-- [아키텍처 다이어그램](../04_아키텍처/README.md)
+- [PRD](../prd.md)
+- [기능 명세](../function-spec.md)
+- [Agent 시스템](../../03_에이전트/agent-system.md)
+- [Skill Registry](../../03_에이전트/skill-registry.md)
+- [아키텍처 다이어그램](../../04_아키텍처/README.md)
 
 ## 사용 방법
 
