@@ -24,22 +24,9 @@
 
 ## 2. 시스템 구성도 (Architecture)
 
-```mermaid
-flowchart LR
-  User["RM/준법/리스크 담당자"] --> UI["Web Console (4-zone)"]
-  UI --> Router["Workspace Router"]
-  Router --> Runtime["Case Runtime (app.js 상태)"]
-  Runtime --> Orchestrator["운영 조율 에이전트"]
-  Orchestrator --> Mesh["전문 Agent 메시 (14종)"]
-  Mesh --> Skills["Skill Registry (25종)"]
-  Mesh --> Gov["데이터 거버넌스 게이트<br/>등급제·토큰화·모델 라우팅·반출 스캔"]
-  Gov --> Ext["외부 LLM (토큰 입력만)"]
-  Gov --> OnPrem["국내·온프레 모델 (원본 PII)"]
-  Mesh --> Evidence["Evidence Store"]
-  Mesh --> Approval["Approval Gate"]
-  Approval --> Audit["Audit Ledger (무결성 해시)"]
-  Audit --> UI
-```
+![전체 시스템 아키텍처](../02_제품/자산/diagrams/system-architecture.png)
+
+> 8개 계층: ① 사용자 → ② 운영 콘솔(4-zone) → ③ 케이스 런타임 → ④ 전문 에이전트 메시(14)·스킬(25) → ⑤ **데이터 거버넌스 게이트(차별점)** → ⑥ 모델(온프레/외부) · ⑦ 근거 커넥터(플러그인 6) · ⑧ 기록·통제(Evidence·Approval·Audit). 편집 가능 원본: [`system-architecture.mmd`](../02_제품/자산/diagrams/system-architecture.mmd)
 
 - **4-zone UI**: Sidebar(내비) / Topbar(지시·검색) / Workbench(대시보드·케이스·승인·전세·플러그인 등) / Properties(케이스·근거·감사 맥락).
 - **거버넌스 게이트**는 모든 외부 LLM·플러그인 조회의 관문(차별점). 상세: [`04_아키텍처/`](../04_아키텍처/README.md), [`02_제품/element-specs/07-data-governance-pii.md`](../02_제품/element-specs/07-data-governance-pii.md).

@@ -1,0 +1,36 @@
+flowchart TB
+  U["①  사용자 · 1차 운영자<br/><b>RM · 기업금융 · 사후관리  /  준법 · 리스크 담당자</b>"]
+  P["②  운영 콘솔 · Web Console (4-zone)<br/>사이드바 · 탑바 · 워크벤치 · 프로퍼티  ·  정적 MVP → 본선 API 승격"]
+
+  subgraph CORE["③–④  케이스 런타임 & 전문 에이전트"]
+    direction TB
+    RT["Case Runtime  ·  Case → AgentRun 상태 계약"]
+    ORC["운영 조율 에이전트 (Orchestrator)"]
+    AG["전문 에이전트 메시 <b>14종</b>  +  Skill Registry <b>25종</b><br/>위험감지·상환분류·정책매칭·전세 Shield·이상거래 차단·준법·RM보좌·분석"]
+    RT --> ORC --> AG
+  end
+
+  subgraph GOV["⑤  데이터 거버넌스 게이트  ★최대 차별점 · 모든 외부 호출의 관문"]
+    direction LR
+    G1["①<br/>데이터 등급제"] --> G2["②<br/>토큰화·가명처리"] --> G3["③<br/>모델 라우팅"] --> G4["④<br/>반출 스캔"]
+  end
+
+  ONP["⑥  국내·온프레 모델<br/><b>원본 PII 처리</b>"]
+  EXT["⑥  외부 프런티어 LLM<br/><b>토큰·비식별 입력만</b>"]
+
+  D["⑦  근거 커넥터 · 플러그인/MCP <b>6</b><br/>법령·정책·뉴스·내부DB  /  ECOS·등기·HUG·실거래가 API"]
+
+  subgraph CTRL["⑧  기록 · 통제 (일급 객체)"]
+    direction LR
+    EVD["Evidence Store<br/>근거·출처"]
+    APP["Approval Gate<br/>L0–L4 사람 승인"]
+    AUD["Audit Ledger<br/>무결성 해시 원장"]
+  end
+
+  U ==> P ==> CORE
+  CORE ==> GOV
+  GOV -- "원본 PII" --> ONP
+  GOV -- "토큰만" --> EXT
+  CORE -. "근거 조회" .-> D
+  CORE ==> CTRL
+  GOV --> AUD
