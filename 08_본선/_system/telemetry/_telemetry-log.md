@@ -1,0 +1,72 @@
+---
+tags:
+  - area/system
+  - type/log
+  - status/active
+date: 2026-06-27
+up: "[[_HARNESS-SYSTEM]]"
+aliases:
+  - 텔레메트리로그
+  - telemetry-log
+---
+# 텔레메트리 로그
+
+> 대외비 — 6/29 공식발표 전 비공개.
+> **append-only** — 절대 기존 행 수정 금지. 새 행은 표 하단에만 추가.
+
+## 스키마
+
+| 컬럼 | 설명 |
+|------|------|
+| 날짜 | YYYY-MM-DD |
+| 트리거 | 세션종료 / 체크포인트 / 수동 |
+| 사용 툴 | 주요 툴 목록 (횟수) |
+| 토큰 합계 | 서브에이전트 누적 합산 (in/out 미분리 시 총량) |
+| 소요 | 추정 소요시간 |
+| 작업/산출물 | 수행 작업 요약 |
+| 투입 에이전트/모델 | 에이전트명 + 모델 |
+| 비고 | 특이사항 |
+
+---
+
+## 로그 테이블
+
+| 날짜 | 트리거 | 사용 툴 | 토큰 합계 | 소요 | 작업/산출물 | 투입 에이전트/모델 | 비고 |
+|------|--------|---------|-----------|------|------------|-------------------|------|
+| 2026-06-26 | 수동 | Read, Bash, Agent | 53,087 | ~30min | 대회개요 탐색·정리 | general-purpose / sonnet | 본선 준비 Phase 1 |
+| 2026-06-26 | 수동 | Read, Bash, Write | 25,518 | ~20min | 원천 인벤토리 구축 | general-purpose / haiku | 본선 준비 Phase 1 |
+| 2026-06-26 | 수동 | Write, Edit, Read | 64,639 | ~40min | 대회 정본 작성 | general-purpose / haiku | 기능명세서 v1 |
+| 2026-06-26 | 수동 | Read, Agent, Bash | 155,583 | ~90min | MVP 점검·분석 | general-purpose / sonnet | 현 제품 갭분석 |
+| 2026-06-26 | 수동 | Write, Read, Agent | 71,170 | ~45min | 발표덱 아웃라인 작성 | general-purpose / sonnet | 본선 발표 준비 |
+| 2026-06-26 | 수동 | Write, Edit, Agent | 82,912 | ~50min | 시연 시나리오 작성 | general-purpose / sonnet | 데모 시나리오 v1 |
+| 2026-06-26 | 수동 | Read, Write, Agent | 71,470 | ~45min | 구조 청사진 작성 | general-purpose / sonnet | 시스템 아키텍처 설계 |
+| 2026-06-27 | 수동 | Read, Bash, Agent | 74,125 | ~45min | paperclip 분석 | general-purpose / sonnet | 레퍼런스 역분석 |
+| 2026-06-27 | 수동 | Write, Read, Bash | 78,428 | ~50min | 스캐폴드 빌더 | general-purpose / sonnet | 볼트 구조 생성 |
+| 2026-06-27 | 수동 | Write, Read, Bash, Agent | — | ~60min | 인-볼트 메모리+운영 하네스 구축 | Orchestrator / sonnet | 이 세션 (하네스 시스템 구현) |
+
+---
+
+## 기록 시점 규칙
+
+기록 시점: 세션종료(자동 훅 — `automation/session-telemetry.mjs`) / 체크포인트(작업 단위 완료 시 수동) / 수동(사용자 "기록해" 명령)
+
+---
+
+## 누적 통계
+
+| 항목 | 값 |
+|------|----|
+| 총 세션 수 | 10 |
+| 총 토큰 합계 | 676,932+ |
+| 기간 | 2026-06-26 ~ 2026-06-27 |
+| 주요 모델 | sonnet (7회), haiku (2회) |
+
+---
+
+## 연결
+
+- [[_HARNESS-SYSTEM|하네스 시스템]]
+- [[08_본선/_system/agents/_agent-registry|에이전트 레지스트리]]
+- [[08_본선/_system/visualizations/tokens-time|토큰/시간 시각화]]
+| 2026-06-26 19:39 | 세션종료 | — | 0/0 | — | — | (자동) | (트랜스크립트 없음) |
+| 2026-06-26 19:39Z | 세션종료 | — | 0/0 | — | (트랜스크립트 없음) | direct | estimate |

@@ -27,9 +27,11 @@ aliases:
 
 ## 오늘 우선 확인
 
+- [ ] [[08_본선/PLAN\|PLAN]] · [[08_본선/PROGRESS\|PROGRESS]] — 운영 SSoT(무엇·왜 / 작업 상태)
 - [ ] [[08_본선/_system/dashboard/project-dashboard\|프로젝트 대시보드]] — KPI 상태 체크
 - [ ] [[08_본선/05_제출/submission-checklist\|제출 체크리스트]] — 완료 항목 확인
 - [ ] [[08_본선/02_전략/03_decisions/risk-register\|리스크 레지스터]] — 신규 리스크 없는지 확인
+- [ ] [[08_본선/_system/_HARNESS-SYSTEM\|하네스]] · [[08_본선/AGENTS\|협업 계약]] · [[08_본선/_system/tools/_tools-index\|도구]] — 운영 시스템
 
 ---
 

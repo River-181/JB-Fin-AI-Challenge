@@ -3,7 +3,7 @@ tags:
   - area/system
   - type/guide
   - status/active
-date: 2026-06-26
+date: 2026-06-27
 up: "[[HOME]]"
 aliases:
   - 에이전트협업
@@ -15,30 +15,78 @@ aliases:
 > 이 대회를 **운영하고 실제 일을 하는** 에이전트들이 충돌 없이 협업하고, 작업이 **자동으로 누적**되도록 하는 단일 계약. 모든 서브에이전트·세션은 이 규약을 따른다.
 
 ## 1. 원칙
-1. **단일 출처(SSOT) 우선** — 사실·수치·에이전트명은 [[_canon|예선 Canon]] / [[심사기준]] / [[본선-안내]]를 기준으로. 새 사실은 출처와 함께 기록.
+1. **단일 출처(SSOT) 우선** — 사실·수치·에이전트명은 [[_canon|예선 Canon]] / [[JB금융그룹 Fin AI Challenge — 대회 안내 정본 (공식 전문)]] / [[본선-안내]]를 기준으로. 새 사실은 출처와 함께 기록.
 2. **기록이 곧 작업** — 모든 의미 있는 작업은 끝나기 전에 `04_증빙/01_핵심로그/`에 한 줄이라도 남긴다(append-only).
 3. **핸드오프 무손실** — 에이전트 간 인계는 아래 6블록 포맷을 강제.
 4. **옵시디언 정합** — 내부 링크는 위키링크 `[[ ]]`, frontmatter 필수, 중복 파일명 금지([[hagent-os-구조-청사진]] §4).
 
-## 2. 역할 분담 (읽는 파일 / 쓰는 파일)
-| 역할 | 주 임무 | 읽기 | 쓰기 |
-|------|---------|------|------|
-| **Orchestrator(메인)** | 분해·위임·통합·사용자 소통 | 전체 | `decision-log`, `session-log`, MOC |
-| **Research** | 사실·근거·레퍼런스 조사 | `07_원천`, `05_리서치`, 웹 | `02_전략`, `04_증빙/02_분석자료` |
-| **Product/Design** | PRD·IA·디자인시스템 역엔지니어링 | `03_제품`, paperclip 분석 | `03_제품/01_prd`,`03_제품/03_ux` |
-| **Builder** | 백엔드·앱 구현 (승인 후) | `03_제품/04_tech`, `app/` | `03_제품/app`, `tests` |
-| **Evidence** | 로그·증빙 누적 | 전체 | `04_증빙/*` |
-| **Judge/QA** | 심사 25항목 적합성·검증 | `05_제출`, `심사기준` | `04_증빙`, `05_제출/live-final-verification` |
+---
+
+## 2. 역할 분담 (10역할 — 읽는 파일 / 쓰는 파일 / 의사결정)
+
+> 역할 상세 정의: `_system/agents/roles/*.md`
+> ★ = 이번 본선에서 1급으로 승격/신설 (금융·준법·디자인)
+
+### 의사결정 3분할
+- **자율**: 해당 역할 분야의 검증·기록·분석은 사람 확인 없이 판단·실행.
+- **제안→승인**: 범위 변경·코드 구현·문서 수정은 orchestrator 또는 사용자 확인 후 실행.
+- **사람만**: 외부 제출·공개·고객 대상 액션은 반드시 사용자 명시적 승인.
+
+| 역할 | 주 임무 | 읽기 | 쓰기 | 의사결정 | 모델 |
+|------|---------|------|------|----------|------|
+| **orchestrator** | 분해·위임·6블록 통합·SSoT·승인 게이트 | 전체 | `PROGRESS`, `decision-log`, `session-log`, MOC | 게이트 운영 | Opus |
+| **finance-domain** ★ | 은행 여신·심사·사후관리·소상공인/전세/사기 실무 정합, JB 사업 연계, 고객여정 현실성 ("현직 RM/심사역" 관점) | `_canon`, `05_리서치`, `03_제품` | `02_전략`, `03_제품/01_prd` | 자율(도메인 검증) | Sonnet |
+| **compliance-risk** ★ | 신용정보법·개인정보보호법·전자금융감독·내부통제, PII 비반출 거버넌스 정합, 환각·설명가능성·책임소재. **핵심 차별점 수호** | 법령·`06_증빙`, `03_제품/04_tech` | `06_증빙`, 거버넌스 문서 | 자율(규제 검증), 위반 시 게이트 | Sonnet |
+| **research** | 사실·근거·출처·법규 확인(perplexity/context7 우선) | `07_원천`, 웹 | `02_전략`, `04_증빙/02_분석자료` | 자율(증빙) | Sonnet |
+| **product** | 제품 정의·스코프·25항목 매핑·우선순위 | `02_전략`, `심사기준` | `03_제품/01_prd` | 제안→승인 | Sonnet |
+| **designer** ★ | paperclip 기준 디자인시스템·IA·화면맵·발표 비주얼·Excalidraw | paperclip 분석, `03_제품/03_ux` | `03_제품/03_ux`, `assets`, `visualizations` | 제안→승인 | Sonnet |
+| **builder** | 백엔드+프론트 구현·TDD·오프라인 구동(승인 후 코드) | `03_제품/04_tech`, `app` | `03_제품/app`, `tests` | 제안→승인; 버그 자율 | Sonnet |
+| **judge-qa** | 25항목 적합성·verify-implementation·심사 시뮬 | `05_제출`, `심사기준` | `04_증빙`, `05_제출/live-final-verification` | 자율(검증) | Sonnet |
+| **evidence** | Capture-by-default 집행·intake append·기여 통계 | 전체 | `04_증빙/*`, `_system/telemetry`, `team` | 자율(증빙) | **Haiku** |
+| **submission** | 패키징·README→SHARE-PACKAGE·피칭 | `05_제출`, `00_제출` | `05_제출`, `00_제출` | **사람만**(제출 확정) | Sonnet |
+
+---
+
+## 2-A. 후보 에이전트 (대비용 — 정의만, 필요 시 orchestrator가 승격)
+
+> 상세 정의: `_system/agents/candidates/*.md`
+
+| 역할 | 목적 | 승격 트리거 |
+|------|------|-----------|
+| **red-team-judge** | 적대적 심사위원 페르소나. 데모·발표를 깨려 시도해 약점 사전 발견 | 발표 리허설 전, 제출 패키지 완성 후 |
+| **data-engineer** | 공공데이터·ECOS·등기·HUG·RAG 파이프라인·데이터 모델 | 본선 서버 API 구현 시작 시 |
+| **pitch-storyteller** | 발표 내러티브·스토리텔링·시간 배분 코치 | 7/4~5 발표 준비 2주 전 |
+| **security** | 위협 모델·망분리·시크릿·취약점 (준법과 별도 기술 보안) | 코드 보안 검토 필요 시 |
+
+---
+
+## 2-B. 사람 4슬롯 ↔ 에이전트 클러스터 매핑
+
+> 팀 프로필 수신 후 슬롯 채움. 현재는 슬롯명으로 관리.
+
+| 슬롯 | 역할 | 주 에이전트 클러스터 | 후보 에이전트 |
+|------|------|-------------------|------------|
+| **슬롯 A** (운영·발표) | 팀장·발표자 | orchestrator + submission | pitch-storyteller |
+| **슬롯 B** (개발) | 개발자 | builder | data-engineer · security |
+| **슬롯 C** (디자인·기획) | 기획·디자인 | designer + product | — |
+| **슬롯 D** (금융·준법·리서치) | 금융 도메인 | finance-domain + compliance-risk + research | — |
+
+> evidence · judge-qa · red-team = AI 주도 + 팀 공유 (특정 슬롯에 고정하지 않음)
+
+---
 
 ## 3. 핸드오프 출력 포맷 (6블록 — 모든 서브에이전트 최종 메시지)
+
 ```
 1. Task        — 무엇을 했나 (1줄)
 2. Inputs      — 읽은 파일/근거
 3. Output      — 만든/수정한 파일 경로
 4. Assumptions — 가정한 것
 5. Open risks  — 미해결·불확실
-6. Next action — 다음에 할 일
+6. Next action — 다음에 할 일 (담당 역할 에이전트 지정)
 ```
+
+---
 
 ## 4. 자동 누적 규약 (Append-only)
 모든 세션·에이전트는 작업 종료 시 아래에 **추가**한다(덮어쓰기 금지):
@@ -46,11 +94,18 @@ aliases:
 - 의사결정(선택·이유·대안) → [[decision-log]]
 - 세션 요약(한 일·결과·다음) → [[session-log]]
 - 위 3종의 인덱스/상태 → [[master-evidence-ledger]]
+- **텔레메트리 1행** → `_system/telemetry/ai-session-intake.csv` (컬럼: ts, engine, agent, member_slot, domain, task, tokens_in, tokens_out, duration, tools, exact|estimate, prompt_ref)
 
 > **완전 자동화(선택)**: Claude Code Stop 훅으로 세션 종료 시 `session-log`에 타임스탬프 항목을 자동 append 가능. 와이어링은 `update-config`로 settings.json에 등록(사용자 승인 후). 미적용 시에도 위 규약을 수동 준수.
+
+---
 
 ## 5. 지식 우선순위 (LLM-Wiki-First)
 raw 원천을 매번 다시 읽기 전에 정제된 지식을 먼저 본다: [[_MOC_HOME|본선 MOC]] → 섹션 MOC → `03_제품` 정본 → 그래도 없으면 `07_원천`/웹.
 
+---
+
 ## 6. 연결
 - [[HOME|본선 홈]] · [[project-dashboard|운영 대시보드]] · [[hagent-os-구조-청사진|구조 청사진]]
+- 역할 상세: [[_system/agents/roles/orchestrator|orchestrator]] · [[_system/agents/roles/finance-domain|finance-domain]] · [[_system/agents/roles/compliance-risk|compliance-risk]] · [[_system/agents/roles/research|research]] · [[_system/agents/roles/product|product]] · [[_system/agents/roles/designer|designer]] · [[_system/agents/roles/builder|builder]] · [[_system/agents/roles/judge-qa|judge-qa]] · [[_system/agents/roles/evidence|evidence]] · [[_system/agents/roles/submission|submission]]
+- 후보: [[_system/agents/candidates/red-team-judge|red-team-judge]] · [[_system/agents/candidates/data-engineer|data-engineer]] · [[_system/agents/candidates/pitch-storyteller|pitch-storyteller]] · [[_system/agents/candidates/security|security]]
