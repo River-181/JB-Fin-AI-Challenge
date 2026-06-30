@@ -9,7 +9,9 @@ test-results/
 !.omc/
 !.omc/decisions.md
 .omx/
-.claude/
+# .claude: 공유 settings.json만 추적(팀 plugin 동기화), 나머지(스킬·에이전트·settings.local)는 개인
+.claude/*
+!.claude/settings.json
 
 00_제출/발표자료/render/
 00_제출/발표자료/template.pptx
@@ -25,3 +27,20 @@ tests/results/
 00_제출/시연영상/*.mp4
 00_제출/시연영상/*.webm
 00_제출/시연영상/frames/
+
+# 본선 관련 원본 이메일 (개인정보·대외비 포함 — 6/29 공식발표 전 외부 유출 금지)
+07_원천/메일/
+
+# 회의 원문(STT 전문) — 실명·개인정보·결제정보 포함, 대외비. 정리본만 추적, 원문은 Syncthing 로컬 공유만
+08_본선/04_증빙/04_회의록/_원문/
+
+# Syncthing / Obsidian 로컬 동기화·설정 (오픈소스 repo에 불필요)
+.stfolder/
+.stignore
+.obsidian/
+
+# 서드파티 에이전트 스킬/툴 런타임 설치물 (개인 머신별 — bootstrap로 각자 설치)
+# (소스가 아니라 외부 repo 설치 산출물. 라이선스·비대화 방지. 레지스트리=08_본선/_system/tools/)
+.agents/
+.impeccable/
+.gitmodules
