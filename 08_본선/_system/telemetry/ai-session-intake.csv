@@ -14,3 +14,5 @@ ts,engine,agent,member_slot,domain,task,tokens_in,tokens_out,duration,tools,exac
 2026-06-30 05:05Z,claude,direct,AI,ops,(자동 기록),7742952,1141367,81h11m,"Edit×73, Bash×63, Read×22, Agent×18, Write×16, Skill×2",estimate,—
 2026-06-30 05:38Z,claude,direct,AI,ops,(자동 기록),7793324,1178698,81h44m,"Edit×74, Bash×68, Read×23, Agent×18, Write×16, Skill×2",estimate,—
 2026-06-30 07:27Z,claude,direct,AI,ops,(자동 기록),10021616,1381209,83h34m,"Edit×93, Bash×77, Read×36, Write×21, Agent×18, Skill×2",estimate,—
+2026-06-30 07:32Z,claude,direct,AI,ops,(자동 기록),10080407,1425935,83h38m,"Edit×94, Bash×83, Read×36, Write×21, Agent×18, Skill×2",estimate,—
+2026-06-30 07:37Z,claude,direct,AI,ops,(자동 기록),10090084,1430871,83h43m,"Edit×94, Bash×84, Read×36, Write×21, Agent×18, Skill×2",estimate,—
