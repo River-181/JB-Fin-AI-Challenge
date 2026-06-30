@@ -20,3 +20,5 @@ ts,engine,agent,member_slot,domain,task,tokens_in,tokens_out,duration,tools,exac
 2026-06-30 07:44Z,claude,direct,AI,ops,(자동 기록),10158384,1485843,83h50m,"Edit×95, Bash×90, Read×36, Write×22, Agent×18, Skill×2",estimate,—
 2026-06-30 07:46Z,claude,direct,AI,ops,(자동 기록),10179392,1505615,83h53m,"Edit×95, Bash×93, Read×36, Write×22, Agent×18, Skill×2",estimate,—
 2026-06-30 07:49Z,claude,direct,AI,ops,(자동 기록),10194357,1518377,83h55m,"Bash×95, Edit×95, Read×36, Write×22, Agent×18, Skill×2",estimate,—
+2026-06-30 07:59Z,claude,direct,AI,ops,(자동 기록),10271004,1567794,84h6m,"Edit×98, Bash×97, Read×37, Write×22, Agent×20, Skill×2",estimate,—
+2026-06-30 17:40Z,chatgpt,gpt-5.5-xhigh,D,research,D3e JB 총정리본 회수,—,—,—,deep-research,estimate,R30
