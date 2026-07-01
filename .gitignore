@@ -37,6 +37,8 @@ tests/results/
 # Syncthing / Obsidian 로컬 동기화·설정 (오픈소스 repo에 불필요)
 .stfolder/
 .stignore
+# .stversions = Syncthing 버전 트래시(구 스냅샷·.DS_Store·구 _canon 사본). git 유입 시 SSOT 오염 위험.
+.stversions/
 .obsidian/
 
 # 서드파티 에이전트 스킬/툴 런타임 설치물 (개인 머신별 — bootstrap로 각자 설치)
