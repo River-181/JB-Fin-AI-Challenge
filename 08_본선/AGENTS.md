@@ -22,7 +22,7 @@ aliases:
 
 ---
 
-## 2. 역할 분담 (11역할 — 읽는 파일 / 쓰는 파일 / 의사결정)
+## 2. 역할 분담 (14역할 — 읽는 파일 / 쓰는 파일 / 의사결정)
 
 > 역할 상세 정의: `_system/agents/roles/*.md`
 > ★ = 이번 본선에서 1급으로 승격/신설 (금융·준법·디자인)
@@ -46,6 +46,7 @@ aliases:
 | **data-engineer** | 공공데이터·ECOS·등기·HUG·RAG 파이프라인·데이터 모델(2026-07-02 후보→승격) | API 문서, `_canon §10`, `05_리서치` | `03_제품/04_tech`, 데이터 스키마 | 자율(수집·스키마); 외부 API 제안→승인 | Sonnet |
 | **judge-qa** | 25항목 적합성·verify-implementation·심사 시뮬 | `05_제출`, `심사기준` | `04_증빙`, `05_제출/live-final-verification` | 자율(검증) | Sonnet |
 | **evidence** | Capture-by-default 집행·intake append·기여 통계 | 전체 | `04_증빙/*`, `_system/telemetry`, `team` | 자율(증빙) | **Haiku** |
+| **data-steward** ★ | 로그·텔레메트리·**커밋/푸시 통계**·리서치 로우데이터 독립 세션 전담(evidence 상위 운영자) | 전체 로그·CSV·`_결과` | `_system/telemetry`, `team`, 통계 문서 | 자율(데이터 관리) | Sonnet |
 | **submission** | 패키징·README→SHARE-PACKAGE·피칭 | `05_제출`, `00_제출` | `05_제출`, `00_제출` | **사람만**(제출 확정) | Sonnet |
 
 ---
@@ -63,17 +64,18 @@ aliases:
 
 ---
 
-## 2-B. 사람 4슬롯 ↔ 에이전트 클러스터 매핑
+## 2-B. 사람 4슬롯 ↔ 에이전트 클러스터 매핑 (실팀 확정 2026-07-03)
 
-> 팀 프로필 수신 후 슬롯 채움. 현재는 슬롯명으로 관리.
+> 업무분장 근거 [[업무분장-작업로그]]. 발표 총괄=김민주, **발표자(등단)는 미정**.
 
-| 슬롯 | 역할 | 주 에이전트 클러스터 | 후보 에이전트 |
-|------|------|-------------------|------------|
-| **슬롯 A** (운영·발표) | 팀장·발표자 | orchestrator + submission | pitch-storyteller |
-| **슬롯 B** (개발) | 개발자 | builder | data-engineer · security |
-| **슬롯 C** (디자인·기획) | 기획·디자인 | designer + product | — |
-| **슬롯 D** (금융·준법·리서치) | 금융 도메인 | finance-domain + compliance-risk + research | — |
+| 슬롯 | 담당(실명) | 실제 분장 | 주 에이전트 클러스터 | 후보 |
+|------|------|------|-------------------|------|
+| **슬롯 A** (문서·제출물·서사) | **김주용** | 문서·기능구조·제출문서·발표흐름 초안·"왜 하나의 AX 콘솔인가" 서사·스킬/플러그인 | submission + product | pitch-storyteller |
+| **슬롯 B** (개발) | **이승보** | 프로토타입·설계도·은행 DB 연결 명문화 | builder + architect | data-engineer · security |
+| **슬롯 C** (디자인·발표) | **김민주** | 디자인 토큰·화면 톤·발표 전반·이름/슬로건·승인 UX | designer | — |
+| **슬롯 D** (외부확인·리서치) | **최영욱** | 공공데이터·KIPRIS 상표·전세/피싱 출처·은행 자동화 vs 차별점 GPT딥리서치 | research | — |
 
+> **finance-domain · compliance-risk = AI(Sonnet) 전담** — 전담 금융/준법 인력이 사람 슬롯에 없음(최영욱=외부확인 리서치가 금융 사실 보조). PII 비반출·규제 게이트는 AI가 설계 첫날부터 수호.
 > evidence · visualization · judge-qa · red-team = AI 주도 + 팀 공유 (특정 슬롯에 고정하지 않음)
 
 ---
