@@ -43,6 +43,7 @@ aliases:
 | **`tool-intake`** | **자체 구축 스킬** | `_system/skills/tool-intake/` → bootstrap → `.claude/skills/` | 없음 | **활성** | 신규 도구 도입 6단계(출처검증→SkillSpector 스캔→레지스트리→bootstrap 게이트→메모리 트리거→로그) | Claude/Codex |
 | **`session-boot`** | **자체 구축 스킬** | `_system/skills/session-boot/` → bootstrap → `.claude/skills/` | 없음 | **활성** | 새 세션 오리엔테이션 — 진입점·현재상태(미커밋·미해결·다음)·자동스킬·게이트 한 번에 로드(boot.mjs 스냅샷). CLAUDE.md가 본선 작업 시작 시 자동 호출 | Claude/Codex |
 | **`submission-consistency-check`** | **자체 구축 스킬** | `_system/skills/submission-consistency-check/` → bootstrap → `.claude/skills/` | 없음 | **활성** | 제출·발표 문서 간 히어로 시나리오·MVP 범위·검증기준·제품정의 **내용 불일치** 교차 감사(예선 SME↔본선 2계열사 충돌 등) | Claude |
+| **`plugin-sync`** | **자체 구축 스킬** | `_system/skills/plugin-sync/` → bootstrap → `.claude/skills/` | 없음 | **활성(bootstrap SKILL_DIRS 등록 승인대기)** | 커밋 settings.json(팀 세트)에서 플러그인 마켓플레이스+세트 재설치·동기화(설치가이드=--dry-run). harness-sync의 plugin-inventory와 방향 반대(오염없는 재현) | Claude/Codex |
 
 ---
 

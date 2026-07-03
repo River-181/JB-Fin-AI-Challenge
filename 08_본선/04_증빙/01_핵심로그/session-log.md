@@ -346,7 +346,7 @@ aliases:
 
 ### 2026-07-02 · JB 콘솔 프로토타입 착수 (fork를 우리 예선 설계+JB디자인으로)
 - **재프레이밍(사용자)**: 현 fork는 "paperclip에 이름만 바꾼 것" → 우리 예선 15페이지 IA·전세Shield·PII거버넌스·L0~L4·증빙체인으로 재구성 + 표절우려 해소용 **깊은 JB 디자인**. **위상=팀 내부 레퍼런스**(실제 제품은 팀원 별도). 품질 바=**5천만원 외주 납품물**([[jb-console-quality-bar]]).
-- **컨텍스트 관리**: fork 독립 git **jb-console 브랜치** 신설. SSOT [[JB-콘솔-프로토타입-스펙]] 신설. 토큰 파이프라인 `scripts/jb-tokens-sync.mjs`.
+- **컨텍스트 관리**: fork 독립 git **jb-console 브랜치** 신설. SSOT [[JB-콘솔-프로토타입-스펙-가안]] 신설. 토큰 파이프라인 `scripts/jb-tokens-sync.mjs`.
 - **Codex 5병렬 착수**: C1 JB디자인CSS·C2 IA맵·C3 전세Shield·C4 PII+감사체인·C5 리스크L0~L4. ⚠️Codex sandbox localhost·Downloads쓰기 차단→적용·시드=메인세션.
 - 볼트 무영향(verify_static green 유지).
 
@@ -386,7 +386,7 @@ aliases:
 - **P0~P4 완료**(커밋 2324d28·427f6bd·282de15): 밝은 테마 기본·nav 정리 / 시드데이터 5모듈 / 케이스 큐+상세 전용뷰(8단계 타임라인·근거·산출물MD·승인+감사) / 스킬 콘텐츠 엔진·플러그인 MCP 레지스트리 / 디자인 폴리시(게이지·버튼).
 - **fork 이전**: `~/Downloads/archives/`→`~/project/active/paperclip-jb-fork`(Codex TCC 우회, 볼트 sibling). [[paperclip-fork-experiment]] 갱신.
 - **개발 분업(Codex 구현·토큰 절약)**: 신규파일=Codex 생성→`/tmp` 스테이징→Claude 이동(P1·P2·P3), 기존편집·디자인 반복=Claude(P0·P4), localhost·스크린샷·시드·검증=Claude. Codex 샌드박스는 fork read/write 불가(볼트만) — 정본 [[JB-콘솔-개발도구-SDK-플랜]].
-- **검증**: 전 tsc 0·pageerror 0·verify_static 34 green·볼트 fork코드 0. 스펙 [[JB-콘솔-프로토타입-스펙]]·프롬프트로그 [P]브랜치(P1~P24) 갱신.
+- **검증**: 전 tsc 0·pageerror 0·verify_static 34 green·볼트 fork코드 0. 스펙 [[JB-콘솔-프로토타입-스펙-가안]]·프롬프트로그 [P]브랜치(P1~P24) 갱신.
 
 ### 2026-07-03 · JB우리캐피탈 도메인 하네스 신설 (wooricap.com 전수 분석)
 - **신설**: `03_제품/07_계열사-하네스/` — 메인 운영 하네스([[_HARNESS-SYSTEM]]) 틀을 미러링한 **계열사 도메인 하네스**. 마스터 [[_HARNESS-WOORICAP]] + 5문서(회사개요·조직도·업무처리-기술·사이트-IA분석·요구해결-맵).
@@ -433,3 +433,47 @@ aliases:
 **결과물**: [[2026-07-03]], [[_daily-INDEX]], [[decision-log]], [[session-log]], [[프롬프트-로그]].
 
 **다음**: canon-moc-sync로 링크 정합성 확인.
+
+### 2026-07-03 · 공개 라이브 데모 URL + 온라인 DB 배포 스택 리서치
+**한 일**
+- 본선 안내 자료를 재확인하고, 공개 라이브 데모 URL + 누구나 볼 수 있는 온라인 DB로 MVP를 확장하는 데 필요한 배포/호스팅/DB/백엔드/CLI/MCP 스택을 Codex에 위임해 리서치.
+- 결론(정적 호스팅=Cloudflare Pages, 온라인 DB=Supabase, 백엔드=별도 서버 없음/RPC, CLI/MCP 5종, SkillSpector 게이트 재확인, DataSource 인터페이스 설계)을 문서화하고 레지스트리·로그에 전파.
+
+**결과물**: [[배포-스택-리서치-20260703]] 신설, [[registry-cli]]·[[registry-mcp]] 각 2~3행 추가(상태=검증 후 사용), [[프롬프트-로그]] T11, [[decision-log]] 1행.
+
+**다음**: 실제 CLI 설치(Wrangler/Supabase)·MCP 연결·배포 실행은 외부공개 게이트 — 사용자 승인 대기. 승인 시 DataSource 인터페이스(LocalStorageDataSource/SupabaseDataSource) 구현 착수.
+
+### 2026-07-03 · 마일스톤 — 리서치·앱설계 초안 → 바텀업 결정준비 배치 피벗 (Codex 오버나이트 Workflow 2라운드)
+- **목적**: 정의서(스펙) 착수 前, 7/1~7/3 회의 기반으로 결정에 필요한 후보·근거·판정만 먼저 준비(확정은 7/4 오전 팀 몫). 리서치·앱설계 초안 단계에서 바텀업 결정준비 배치로 전환.
+- **산출**: `08_본선/03_제품/00_결정-준비/` 신설 — 회의록 3종 인물별 정리+추출 · [[결정-현황-종합]](확정10·가안9·미결12, Q1~Q12) · 질문 Q1~Q12(후보 A/B/C + 데이터근거 D1~D31 + 500자 프롬프트 + 심사위원 반박) · 근거팩 3종([[ROI-근거팩]]·[[적법성-근거팩]]·[[실동작-데모-증거팩]], weak→improved 검증) · [[발표-탄약고-검증된근거]](심사 5축 42근거) · viz 3보드 · [[아침-카톡-브리핑]] · [[MASTER-PLAN-오버나이트-결정준비]] · [[_결정준비-MOC]].
+- **방식**: Workflow 2라운드(agent 39개·에러 0, sub-agent 약 220만 토큰 = Sonnet+Codex 헤드리스, Opus 최소 사용). 회의록 6천줄 분해·리서치 마이닝은 Codex에 위임.
+- **검증**: ROI 연 7.66억 절감(RM 116석·D16 바텀업 재검증) 확정. 적법성 = 신정법 §40조의2(canon §4 기존 근거 재확인 + 초기 심사반박 오탐 정정) + 전자금융감독규정 §15 망분리 + 금융위 MLS. 작업 중 자기 오류 2건 자동 정정(§36조의2 오귀속 · 연체축 수치 17조→19조808억 1차). 커밋 018d11c·9c09927(내 배치 파일만·로컬·미푸시). 볼트 정합 100%(canon-moc-sync 죽은링크 0·도달성 100%).
+- **다음**: 7/4 오전 팀 결정 대기 — keystone(전세 vs 피싱 실동작 택1) → Q1·Q6·Q7·Q8·Q9 연쇄 확정. 남은 갭: ROI 실현율[추정] 검증, 공공API/로컬모델 도달성 확인, JB우리캐피탈 수치[미검증] 재확인.
+
+### 2026-07-03 · 팀 공유용 오전 결정 브리핑 보드 생성
+- **목적**: 오버나이트 결정준비 결과를 팀원이 바로 공유·판단할 수 있는 한 장짜리 보고용 시각자료로 압축.
+- **산출**: [[morning-decision-brief-board-plan]] 신설, `morning-decision-brief-board.excalidraw` 생성, 20260703 공유용 PNG/SVG export 대상 등록.
+- **보드 내용**: ROI 연 7.66억원·적법성·실동작 도달성 3축은 검토만으로 표시. Q1/Q3/Q5/Q7/Q11/Q12 후보와 추천안을 한 테이블로 정리. `전세사기 vs 보이스피싱 실동작 택1`을 keystone으로 크게 표시. 이승보·김민주·김주용·최영욱·재형 담당 액션과 제품 구조 흐름을 함께 배치.
+- **자동화 반영**: [[VISUALIZATION-PLAN]]·[[_viz-index]] 등록, `viz-generator.mjs`·`viz-exporter.mjs`·`visualization-cycle/scripts/run.mjs` 갱신.
+- **다음**: 7/4 오전 실제 결정 후 Q1/Q3/Q5/Q11/Q12 상태를 `확정`으로 갱신.
+
+### 2026-07-03 · 배포 AI-실행성 교정 + deploy-public-demo.sh 신설
+- Codex 배포 리서치의 `wrangler login`/`supabase login`(대화형) 실행 불가를 교정 — 정적 공개데모는 `gh` CLI(비대화형)로 사람개입 0, fork(River-181, admin)에서 배포. `deploy-public-demo.sh` 신설, `--check` 프리플라이트 GREEN. 실배포는 사용자 승인 대기. 상세 [[배포-스택-리서치-20260703]]·[[decision-log]]·[[registry-cli]].
+
+### 2026-07-03 · 로그·통계·로우데이터 관리 세션 (Codex)
+- **부팅/집계**: `node 08_본선/_system/skills/session-boot/boot.mjs`로 세션 부팅 후, `CLAUDE_PROJECT_DIR=/Users/river/project/active/JBproject node 08_본선/_system/skills/telemetry-aggregator/aggregate.mjs` 실행. 1차 집계는 총 17행 처리·신규 텔레메트리 0행.
+- **커밋/푸시 통계**: `origin/ui-density-improvements..HEAD` 기준 미푸시 23커밋(작성자 River-181, 68 files, +7,910/-49), `fork/ui-density-improvements..HEAD` 기준 미푸시 48커밋(166 files, +20,606/-1,054) 확인. 상세는 [[_contribution-stats]]의 `EVIDENCE:UNPUSHED-STATS` 블록에 반영.
+- **로우데이터 점검**: `.gitignore`에 `08_본선/04_증빙/04_회의록/_원문/` 보호 규칙 유지 확인. 현재 워크스페이스에서 `_원문` 파일 및 Git 추적 유입은 0건으로 확인.
+- **주의**: 기존 worktree에 병렬 세션 변경 114파일이 있어 rename/삭제/staging/push 없이 로그·통계 파일만 제한 수정.
+
+### 2026-07-03 · plugin-sync 스킬 신설 + 배포-준비도 점검
+- `_system/skills/plugin-sync/`(sync.mjs+SKILL.md) 신설 — 커밋 settings.json에서 플러그인 마켓플레이스+세트 재설치(node --check·--self-test·--dry-run GREEN), bootstrap(스킬)의 플러그인 짝. registry-skills·`_tools-index`·decision-log 반영(자체 11종). SKILL_DIRS 등록은 승인 대기.
+
+### 2026-07-03 · Codex CLI 토큰 백필 통계 신설
+- **배경**: Claude 플러그인에서 Codex CLI를 열어 사용하는 경우 기존 `session-telemetry.mjs`는 `engine=codex, agent=via-claude` 위임 횟수만 기록하고 Codex 자체 토큰은 `—`로 남겼다.
+- **조치**: `codex-cli-telemetry.mjs` 신설. `/Users/river/.codex/state_5.sqlite`의 `threads`를 프로젝트 `cwd` 기준으로 읽어 `codex-cli-backfill.csv`·[[codex-cli-usage-stats]] 생성. 원문 전체는 저장하지 않고 `first_user_message`는 120자 이하 마스킹 발췌만 보존.
+- **결과**: Codex CLI thread **128건**, `tokens_used` **104,142,333**를 별도 총량으로 백필. [[ai-usage-stats]]에 `Codex CLI 별도 총량` 섹션 추가. 입력/출력 분리값이 아니므로 Claude intake 총량과 합산하지 않는다.
+- **검증**: `node --check` 2종 통과, `test-telemetry.mjs` 통과, 백필 재생성·aggregator 재실행 완료. canon-moc-sync dry-run 죽은링크 0·도달성 100%, `npm run test` 통과(34 files).
+
+### 2026-07-03 · 문서 통합 + 유튜브 디자인툴 6종 리뷰
+플러그인/스킬 관리문서 중복 제거 — [[registry-plugins]]=목록 SSOT(11→12종, humanize-korean 누락 정정)·plugin-sync=동기화 기전 전용·`_tools-index`→registry-skills SSOT 선언. canon-moc-sync dry-run 죽은링크 0·도달성 ✓. 이어서 유튜브 공유 디자인툴 6종 검토 — Impeccable(pbakaus, Apache-2.0)만 지금-추가 후보(SkillSpector 스캔+승인 대기)로 [[도구-확장-리서치-20260701]]에 반영, 나머지는 보류/스킵. taste-skill(Leonxlnx) 개인-전역 기설치 확인, 팀 승격은 미결정.

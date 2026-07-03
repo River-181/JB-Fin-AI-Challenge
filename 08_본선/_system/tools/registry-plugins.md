@@ -18,7 +18,7 @@ aliases:
 
 ## 🔄 프로젝트 동기화 세트 (project scope — 팀 자동 적용)
 
-> **이 repo를 clone하면 아래 11종이 자동 적용됩니다.** SSOT = `.claude/settings.json`(git 추적, `enabledPlugins` + `extraKnownMarketplaces`). 팀원이 일일이 `/plugin install` 안 해도 됨. 적용: clone 후 Claude Code 재시작 → `/reload-plugins`. 인증 필요한 것(figma 등)은 각자 OAuth.
+> **이 repo를 clone하면 아래 12종이 자동 적용됩니다.** SSOT = `.claude/settings.json`(git 추적, `enabledPlugins` + `extraKnownMarketplaces`). 팀원이 일일이 `/plugin install` 안 해도 됨. 적용: clone 후 Claude Code 재시작 → `/reload-plugins`, 또는 `plugin-sync` 스킬(아래). 인증 필요한 것(figma 등)은 각자 OAuth.
 
 | 분류 | 플러그인 | 마켓플레이스 |
 |------|---------|------------|
@@ -27,6 +27,7 @@ aliases:
 | 개발·리뷰·문서 | `superpowers` · `code-simplifier` · `code-review` · `skill-creator` · `context7` | claude-plugins-official |
 | Codex 연동 | `codex` | `github:openai/codex-plugin-cc` |
 | 볼트 운영 | `obsidian` | `github:kepano/obsidian-skills` |
+| 문서·윤문 | `humanize-korean` | `github:epoko77-ai/im-not-ai` |
 | 참조 | `example-skills` | anthropic-agent-skills |
 
 > **제외**(개인 전역 ~/.claude 에만 둠, 팀 미동기화): `agent-sdk-dev` · `telegram` · `chrome-devtools-mcp` · `ponytail`(프로젝트 스코프에서 제외).
@@ -74,53 +75,17 @@ aliases:
 
 ---
 
-## 팀원 설치 가이드 (fallback — 자동 동기화 안 될 때만)
+## 팀원 설치·동기화 (자동 — plugin-sync 스킬)
 
-> 기본은 위 **프로젝트 동기화 세트**(clone → 자동). 아래는 자동 적용이 안 되거나 개인 전역에 깔고 싶을 때의 수동 절차.
-
-### 1단계 — 마켓플레이스 등록
+> 설치·동기화는 **`plugin-sync` 스킬**이 전담한다(상세: `08_본선/_system/skills/plugin-sync/SKILL.md`). 명령 목록을 손으로 이중관리하지 않고 SSOT(`.claude/settings.json`) 하나에서 파생 → 표류 없음.
 
 ```sh
-# 비공식 마켓플레이스 4종 추가 (순서 무관)
-/plugin marketplace add github:kepano/obsidian-skills
-/plugin marketplace add github:openai/codex-plugin-cc
-/plugin marketplace add git:https://github.com/anthropics/skills.git
-/plugin marketplace add git:https://github.com/Yeachan-Heo/oh-my-claudecode.git
+node 08_본선/_system/skills/plugin-sync/sync.mjs --dry-run   # 설치 명령 미리보기(= 항상 최신 정본)
+node 08_본선/_system/skills/plugin-sync/sync.mjs             # 실제 설치·동기화(멱등·재실행 안전)
+node 08_본선/_system/skills/plugin-sync/sync.mjs --global    # 개인 전역 세트까지
 ```
 
-### 2단계 — Baseline 플러그인 설치 (Claude Code)
-
-```sh
-# 팀 baseline 5종 — 전원 필수
-/plugin install obsidian@obsidian-skills
-/plugin install superpowers@claude-plugins-official
-/plugin install context7@claude-plugins-official
-/plugin install skill-creator@claude-plugins-official
-/plugin install codex@openai-codex
-```
-
-### 3단계 — 역할별 추가 설치
-
-```sh
-# 디자이너 권장
-/plugin install frontend-design@claude-plugins-official
-/plugin install ui-ux-pro-max@ui-ux-pro-max-skill
-/plugin install figma@claude-plugins-official
-
-# QA 권장
-/plugin install chrome-devtools-mcp@claude-plugins-official
-
-# 예시·참조용
-/plugin install example-skills@anthropic-agent-skills
-```
-
-### 대안 — settings.json 직접 편집
-
-`~/.claude/settings.json`의 `enabledPlugins` 배열에 `"obsidian@obsidian-skills"` 형식으로 추가하거나, `plugin-inventory.mjs`가 재생성한 값을 그대로 적용.
-
-### Codex CLI 사용 시
-
-Codex CLI는 별도 바이너리(`codex` 명령)를 설치한 뒤, `codex@openai-codex` 플러그인이 Claude Code와 런타임을 연동. 두 환경 모두 baseline 설치 권장.
+수동 fallback: Claude Code에서 `/plugin marketplace add <소스>` → `/plugin install <플러그인@마켓>`. 소스·플러그인 목록은 위 `--dry-run` 출력을 그대로 사용(하드코딩 목록은 표류하므로 두지 않음). Codex CLI는 별도 바이너리(`codex`) 설치 후 `codex@openai-codex`가 런타임 연동.
 
 ---
 

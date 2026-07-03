@@ -35,6 +35,9 @@ aliases:
 | **`GitHub MCP`** | **웹 추천** | `claude mcp add github` (검증 후) | GitHub PAT | **검증 후 사용** | PR·이슈·코드 검색·Actions 연동 | Claude |
 | **`Obsidian MCP`** | **웹 추천** | `claude mcp add obsidian-mcp` (검증 후) | 없음 | **검증 후 사용** | 볼트 직접 읽기·쓰기 (플러그인 보완) | Claude |
 | **`Notion MCP (공식)`** | **웹 추천** | `claude mcp add notion` (검증 후) | Notion 통합 토큰 | **검증 후 사용** | 현재 세션 MCP 대체 또는 보완 | Claude |
+| **`Supabase MCP`** | **웹 추천** | `claude mcp add --transport http supabase "https://mcp.supabase.com/mcp?project_ref=<ref>&read_only=true&features=database,docs"` (검증 후) | Supabase OAuth | **검증 후 사용** | 온라인 DB 조회·문서(read_only 권장, 쓰기는 CLI/RPC로). 상세 [[배포-스택-리서치-20260703]] | Claude |
+| **`Cloudflare MCP`** | **웹 추천** | `claude mcp add --transport http cloudflare-api https://mcp.cloudflare.com/mcp` (검증 후) | Cloudflare OAuth | **검증 후 사용** | Cloudflare 계정 리소스 관리(Pages/Workers). 상세 [[배포-스택-리서치-20260703]] | Claude |
+| **`Cloudflare docs MCP`** | **웹 추천** | `claude mcp add --transport http cloudflare-docs https://docs.mcp.cloudflare.com/mcp` (검증 후) | 없음 | **검증 후 사용** | Cloudflare 공식 문서 조회. 상세 [[배포-스택-리서치-20260703]] | Claude |
 
 ---
 
