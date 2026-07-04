@@ -186,6 +186,8 @@ graph TB
 
 **데모 LLM 게이트웨이 [E4, 2026-07-04 구현]**: 데모 런타임은 Ollama가 아니라 **claude/codex CLI 라우팅(paperclip式)** — `02_제품/scripts/api-proxy.mjs`의 `POST /llm`. 폴백 사다리(요청 엔진→반대 엔진 재시도→사람 큐 `escalated`) 내장, 모든 시도를 `llm-runs.jsonl`에 구조화 기록, 스폰 cwd 중립화로 내부 문서 컨텍스트 유입 차단. 실측 케이스당 ~$0.12(1회, [[Q13-토큰비용-유닛이코노믹스]]). 위 4층 라우팅 표는 실배포 목표이고, 게이트웨이의 tier 라벨(local/frontier)이 그 축소 재현이다.
 
+**JB_project2 로컬 Ollama 실연동 [E4, 8c274b5]**: 위 게이트웨이와 별개로 `_vendor/JB_project2`에는 `scripts/ollama-agent-proxy.mjs`(:8030, 금지패턴 4종 내장)와 `app/agentModelSettings.js`(mock↔ollama 런타임 토글 UI, localStorage 저장)가 신설됐다. 우리 쪽 `02_제품/scripts/api-proxy.mjs`(:8022, PR `LSB-afk/JB_project2#2`)와는 포트·소유 경로가 다른 별도 구현이며 현재 통합되어 있지 않다 — 관계 정리는 [[08_본선/03_제품/reports/구현현황-JB_project2|구현현황-JB_project2]] 참조.
+
 ---
 
 ## 6. Storage (저장소)
@@ -193,6 +195,7 @@ graph TB
 | 대상 | 현 구현(JB_project2) | 승격 후보 | E? |
 |---|---|---|---|
 | 7단 계약 엔티티 | `localStorage`(`ccl-ops-db-v1`), 모든 행 `roleKey`/`workspaceId` 스코프 태깅 | PostgreSQL(permissive) 후보 vs 로컬 유지 — [[08_본선/03_제품/06_build-roadmap/P0-정의-합의|P0]] 옵션 A/B/C 미확정 | E4/E1 |
+| 서버 승격 후보(신규) | (미사용, localStorage가 여전히 기본 경로) | **opt-in 구현 시작됨 [E4, 8c274b5]** — `server/index.mjs` + `JB_DB_DRIVER` 환경변수로 `json`(파일 DB, 기본값)·`supabase`(키는 env 전용) 3단 스토리지 선택. P0 "사실상 옵션A 고정" 판정 재개방 근거 | E4 |
 | 감사 원장 | append-only 로그 + `reviewRequired` 플래그 | append-only 테이블 또는 immutable log store(옵션과 무관하게 고정 요건) | E4/E3 |
 | 벡터스토어 | (미구현) | 로컬 임베딩 우선(sqlite-vec/Chroma vs pgvector) — 외부 임베딩 API 미사용 | E1 [TBD] |
 | 토큰↔원본 키 | (미구현) | HSM 또는 별도 암호화 저장소, 취급자 분리 | E2, D5a [TBD] |

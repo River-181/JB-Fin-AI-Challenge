@@ -152,6 +152,9 @@ aliases: [Demo Script, 데모 대본]
 | 엔진룸 타임라인 | 최근 LLM 호출이 5초 폴링으로 흐르고, 강제로 타임아웃을 내면 폴백 사다리(claude↔codex→사람 큐)가 실제로 도는 걸 본다 | `modules.js engineRoomRows()`, [[08_본선/03_제품/_archive/Q14-오류로깅-폴백사다리\|Q14]] |
 | 감사 용도 태그 | 감사 로그 화면에서 레코드별 "용도 ○○"(당국 증적/분쟁 재생/운영 점검/원가 정산) 표시 | `app.js auditPurpose()`, [[08_본선/03_제품/_archive/Q15-감사로그-실효성\|Q15]] |
 | **Docker 물리분리 킬러컷** | `pii-zone` 컨테이너에서 `curl https://example.com` 시도 → 타임아웃 실패. "PII 존은 외부 인터넷에 물리적으로 나갈 수 없다"를 30초 안에 증명 | `02_제품/deploy/시연-런북-백엔드분리.md` |
+| **Ollama 토글 실연** [조건부, 리허설 성공 시만] | RM 콘솔 설정에서 모의실행↔Ollama 런타임을 전환하고, 로컬 모델 응답이 그 자리에서 채워지는 걸 본다. 프록시(:8030)가 승인단정·금리한도·신용등급단정·PII의심 4종 패턴을 관문에서 필터 — "가드레일은 UI가 아니라 게이트웨이에 있다" | `agentModelSettings.js`·`scripts/ollama-agent-proxy.mjs`(승보 8c274b5, E4) |
+
+백엔드 저장 옵션(`npm run backend`, JSON 기본/Supabase opt-in)도 여유 시 1줄 언급 — "localStorage 데모가 서버 저장으로 승격되는 로드맵을 이미 걷기 시작했다" [E4].
 
 **Docker 킬러컷 복붙 시퀀스**(런북 원문): `docker compose up -d` → `docker network inspect deploy_pii-net --format '{{.Internal}}'`(→ `true`) → `docker compose exec pii-zone curl -m 3 https://example.com`(→ 타임아웃 실패, 이 장면이 증거) → `docker compose exec console curl http://pii-zone:11434/api/tags`(→ 200 OK, 같은 pii-net 안에서만 통신 가능함을 대비 증명). Docker 모드에서는 `engine:"ollama"`만 작동(claude/codex CLI는 컨테이너 밖 host에서만) — 이 제약이 서사가 된다: "PII 존 작업은 로컬모델로만, 외부 프런티어는 컨테이너 밖에서만."
 

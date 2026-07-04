@@ -10,12 +10,16 @@ aliases: [JB_project2 구현현황, implementation-inventory]
 > 대상: `_vendor/JB_project2/app/` (읽기 전용 벤더 클론, 이승보 프로토타입 = 제출 코드정본). 모든 수치는 `grep`/파일 직독으로 확인한 실측치이며, 확인 안 된 항목은 `[미확인]`으로 표시했다.
 >
 > **⚠ 델타 — 재실측 완료 2026-07-05 (0226bd6)**: 아래 §0~§8 원문은 `e57b826` 기준 실측이었다. 이후 **RM 역할 하네스 신설**이 들어와 `_vendor/JB_project2` HEAD `0226bd6` 기준으로 전 항목 재실측했다(§0/§1/§2/§5/§6/§8에 인라인 반영, 원 수치는 보존하고 갱신치를 병기). 핵심 변화: `rmOfficer.*` **15개 신규 파일(2,693줄)**, `RMO_VIEWS` **16개 뷰**(당초 가정 15개가 아님 — `audit-logs` 포함), 전용 에이전트 11개·스킬 11개, 전용 DB 13테이블, e2e 2개 파일 3개 시나리오. **가장 중요한 정정**: org-rail의 "역할=RM" 클릭은 이제 레거시 `rmDashboardPage`(app.js:1769)가 아니라 **신규 `rm-officer-harness`로 연결**된다(app.js:5546-5548 `data-role-filter="RM"` 핸들러). 레거시 `rm-dashboard`는 UI에서 도달 불가능한 고아 라우트로 남아 있고(직접 해시 이동 `#rm-dashboard` 시에만 렌더링), 아래 §1/§2의 "RM 대시보드 = 역할 RM 트리거" 서술은 이 재검증으로 갱신됐다.
+>
+> **⚠ 델타 — 재실측 2026-07-05 #2 (8c274b5)**: 0226bd6 이후 10커밋(+12,034줄, 68파일)이 추가로 들어왔다. `app/` 단독으로 **75개 파일, 35,915줄**(0226bd6 대비 +20파일/+8,399줄). 핵심 변화 3가지 — ① **`server/` 백엔드 신설**(§10): `JB_DB_DRIVER` 환경변수로 localStorage/파일DB(JSON)/Supabase 3단 스토리지 옵션, 키는 env 전용으로 코드에 미노출 확인. ② **Ollama 실연동 경로 신설**(§11): `scripts/ollama-agent-proxy.mjs`(:8030, 금지패턴 4종(승인단정·금리한도·신용등급단정·PII의심) 필터 내장) + `app/agentModelSettings.js` 토글 — 단, 메인 판단·초안 생성 루프(`recordCorporateCreditAgentRun`/`recordRmOfficerAgentRun`)는 여전히 결정론적 mock이고, Ollama는 하네스 뷰의 **별도 "샘플 요청" 버튼**을 눌러야만 실행되는 opt-in 경로다(호출부에 `forceOllama`/runtime 게이트 있음 — 과장 금지). ③ **`corporate-credit` 하네스 이중등록 버그 발견**(§12, 이번 실측 최대 쟁점) — `harnessRegistry.js`가 `id: "corporate-credit"`를 **두 번** 등록하는데, 두 번째(cclConsole 기반) 블록이 참조하는 `CCL_ROLE_KEY` 등은 **어디에도 로드되지 않는 파일**(`cclConsole.*.js`, index.html에 script 태그 없음)의 심볼이라 **`ReferenceError`로 즉시 중단**된다. 그 여파로 같은 파일 내 이후 등록(`fds-response`, 중복 `rm-officer`)이 통째로 누락돼 **FDS 콘솔의 훅 기반 가드레일(`beforeCaseCreate`/`beforeAgentRun`/`beforeCustomerMessage`)이 항상 `{ok:true}`로 무력화**된다. 실제 라이브 렌더 경로(신규 `corporateCredit.*` 15파일/2,036줄, `CCR_ROLE_KEY`)는 이 버그와 무관하게 정상 작동하며 결과적으로 의도한 하네스가 이긴다(우연).
 
 ## 0. 파일 구성 (실측)
 
 당초 CLAUDE.md 설명(`index.html` + `app.js` ~250KB + `modules.js` + `styles.css` ~150KB)보다 훨씬 커졌다. e57b826 기준 실제 앱 디렉터리는 **43개 파일, 총 24,667줄**의 4-콘솔 번들 구조였다.
 
 **재실측(2026-07-05, 0226bd6)**: `app/*.js *.css *.html` 전체 **55개 파일, 총 27,516줄**(`wc -l` 직접 합산). RM 역할 하네스 신설로 **`rmOfficer.*` 15개 신규 파일, 2,693줄**이 추가됐다.
+
+**재실측(2026-07-05 #2, 8c274b5)**: `app/*.js *.css *.html` 전체 **75개 파일, 총 35,915줄**(0226bd6 대비 +20파일/+8,399줄). 순증 최대 항목은 **`corporateCredit*.js` 15개 파일(2,036줄, 신규 독립 CCR 하네스)** + `agentModelSettings.js`(238줄). `app/` 바깥에도 신규 영역이 생겼다 — `server/`(5파일, 994줄), `scripts/ollama-agent-proxy.mjs`(179줄), `tests/backend/server.test.mjs`(320줄). 상세는 §10·§11.
 
 | 파일군 | 파일 수 | 대표 파일(줄 수) |
 |---|---|---|
@@ -40,7 +44,7 @@ aliases: [JB_project2 구현현황, implementation-inventory]
 |---|---|---|---|
 | 기본 업무 보드(원본 MVP) | 계열사=전체/전북은행 | (route-key 없음, `navigation` 배열, 15개 아이템) | app.js 고유, 예선부터 있던 케이스 대시보드 |
 | ~~RM 대시보드~~ (레거시, 재실측으로 고아 라우트 확인) | (UI에서 도달 불가 — 직접 해시 이동만) | `rm-dashboard` (단일 뷰, 하위 라우트 없음) | app.js:1769 `rmDashboardPage`. 아래 참고 |
-| 기업여신 담당자 콘솔(CCL) | 역할=기업여신 담당자 | `corporate-credit` / `/roles/corporate-credit` | cclConsole.\* |
+| 기업여신 담당자 콘솔(CCL) | 역할=기업여신 담당자 | `corporate-credit` / `/roles/corporate-credit` | cclConsole.\* — **[8c274b5 이후 죽은 코드, §12 참고]** 실제 라이브 경로는 `corporateCredit.*`(CCR) 15파일로 대체됨 |
 | FDS/보이스피싱 담당자 콘솔(FDR) | 역할=보이스피싱/FDS 담당자 | `fds-response` / `/roles/fds-response` | fdrConsole.\* |
 | 전세보호 담당자 콘솔(JPO) | 역할=전세보호 담당자 | `jeonse-protection` / `/roles/jeonse-protection` | jeonseProtection.\* (가장 방대) |
 | JB우리캐피탈 콘솔(JBWC) | 계열사=JB우리캐피탈 | `/jb-woori-capital` | wooricap.\*, jbWooriCapital\* — **역할 전환이 아니라 계열사 전환**에 걸림 |
@@ -95,6 +99,8 @@ aliases: [JB_project2 구현현황, implementation-inventory]
 | e2e 2종 | `tests/e2e/rm-officer-smoke.spec.js`(1개), `tests/e2e/rm-officer.spec.js`(2개) | ① 스모크: 진입→보드→키보드 선택→승인(개별→통합 MD)→신규 접수→새로고침 완주. ② scope 격리 + 통합 MD 뷰어 탭 + 민감정보 검색 차단. ③ 보안 훅 차단(PII 접수/자동 종결) + 승인 결정. RM 전용 시나리오 총 3개. |
 
 **총 e2e 시나리오 재실측**: `grep -c "test(" tests/e2e/*.spec.js` 합산 결과 **63개**(jeonse-protection 16 · jeonse-smoke 2 · localguard 24 · role-consoles 7 · wooricap 11 · rm-officer-smoke 1 · rm-officer 2) — §8 기존치 60에서 RM 3개 추가.
+
+**재실측(2026-07-05 #2, 8c274b5)**: 8개 spec 파일 총 **73개** `test()`(corporate-credit-smoke 1 · jeonse-smoke 2 · localguard 25 · jeonse-protection 19 · rm-officer-smoke 1 · role-consoles 7 · rm-officer 7 · wooricap 11) — 신규 `corporate-credit-smoke.spec.js`(88줄) + `rm-officer.spec.js` 283줄 증가(2→7개 시나리오) + `localguard.spec.js` +23줄(24→25) + `jeonse-protection.spec.js` +3개(16→19). 별도로 `tests/backend/server.test.mjs`(320줄, Node `--test`)가 신설되어 `npm run backend:test`로 server/ 백엔드를 검증한다(§10).
 
 ---
 
@@ -163,12 +169,16 @@ aliases: [JB_project2 구현현황, implementation-inventory]
 
 | 콘솔 | 에이전트 수 | 스킬 수 |
 |---|---|---|
-| CCL | 8 (`cclConsoleAgents`, cclConsole.core.js:111) | 6 (`cclConsoleSkills`, :161) |
+| ~~CCL~~(cclConsole, 8c274b5 이후 죽은 코드 — §12) | ~~8~~ (`cclConsoleAgents`, cclConsole.core.js:111) | ~~6~~ (`cclConsoleSkills`, :161) |
+| **CCR(신규, 재실측 2026-07-05 #2 — 실라이브 corporate-credit)** | **15 (`corporateCreditAgents`, corporateCreditAgents.registry.js:28, `ccrAgent(` 15회)** | **7 (`corporateCreditSkills`, :124-132)** |
 | FDR | 8 (`fdrConsole.core.js`) | 6 (`fdrConsoleSkills`, :171) |
 | JPO | 11 (`jeonseProtectionAgents.registry.js`) | 10 (`jeonseProtectionSkills`, :246) |
 | JBWC | 13 (`jbWooriCapitalAgents.registry.js`) | 6 (`jbWooriCapitalSkills`, :271) |
-| **RM(신규, 재실측 2026-07-05)** | **11 (`rmOfficerAgents`, rmOfficerAgents.registry.js:34-267)** | **11 (`rmOfficerSkills`, :269-281)** |
-| **합계(갱신)** | **51 에이전트** | **39 스킬** |
+| RM(재실측 2026-07-05) | 11 (`rmOfficerAgents`, rmOfficerAgents.registry.js:34-267) | 11 (`rmOfficerSkills`, :269-281) |
+| **합계(0226bd6, CCL 기준)** | 51 에이전트 | 39 스킬 |
+| **합계(재실측 2026-07-05 #2, 8c274b5 — CCL→CCR 대체)** | **58 에이전트**(CCR 15 + FDR 8 + JPO 11 + JBWC 13 + RM 11) | **40 스킬**(CCR 7 + FDR 6 + JPO 10 + JBWC 6 + RM 11) |
+
+CCR 15개 에이전트(`ccrAgent()` 팩토리, corporateCreditAgents.registry.js): `ccr-triage`(오케스트레이터)·`ccr-borrower`·`ccr-financial-quality`·`ccr-cashflow`·`ccr-collateral`·`ccr-working`·`ccr-facility`·`ccr-trade`·`ccr-policy-esg`·`ccr-pf`·`ccr-covenant`·`ccr-ews`·`ccr-memo`·`ccr-compliance`(가드레일)·(도메인 라우팅용 1종 추가, `corporateCreditRoutingRules` 참고). `harnessRegistry.js:25`의 `requiredAgents: 15`와 일치(자체검증기가 강제하는 수치와 실측이 정합).
 
 RM 11개 에이전트: `rmo-triage(오케스트레이터)·rmo-marine-risk·rmo-credit-care·rmo-salary-flow·rmo-dsr-guard·rmo-youth-finance·rmo-policy-finance·rmo-action·rmo-comms·rmo-approval-router·rmo-compliance(가드레일)`. 다른 콘솔과 동일하게 `id, agentKey, name, displayName, domain, responsibilities, allowedActions, blockedActions, dbReads, dbWrites, handoffRules, guardrails, metrics` 필드를 갖춘 `rmoAgent()` 팩토리로 생성하며, 모든 에이전트에 `RMO_FORBIDDEN_OUTPUTS`(8개 금지 항목 — 실제 승인/금리/신용평가/정책자금 확정·PII 원문 저장 등)를 `blockedActions`에 공통 병합한다(rmOfficerAgents.registry.js:20).
 
@@ -200,6 +210,9 @@ RM 11개 에이전트: `rmo-triage(오케스트레이터)·rmo-marine-risk·rmo-
 | 5개 독립 localStorage DB(콘솔별 스코프 격리, 재실측: RM 포함 6번째 스코프) | **REAL** | 서로 다른 storage key, `harnessGuardCheckScope`로 교차 오염 검사. RM은 `rmoTable(table, roleKey)`가 동일한 scope 강제 계약을 따름(§5) |
 | E2E 테스트 커버리지 | **REAL** | `_vendor/JB_project2/tests/e2e/`에 5개 spec 파일, 총 60개 `test()` 시나리오(jeonse-protection 16, localguard 24, role-consoles 7, wooricap 11, jeonse-smoke 2) |
 | **RM 업무지원 콘솔(신규, 재실측 2026-07-05)** | **REAL(로직) / MOCKED(AI 출력)** | 16뷰 라우팅·13테이블 scope 격리·키보드 퍼스트(`rmoHandleKeydown`)·인라인 승인(`rmoDoApprove`)·우선순위 계산(`computeRmOfficerPriority`)은 실동작. `rmoBuildAgentDeliverable/rmoBuildIntegratedDeliverable`이 만드는 산출물 텍스트는 다른 4콘솔과 동일하게 템플릿 리터럴(LLM 미호출). e2e 3개 시나리오(총 63개로 갱신) |
+| **백엔드 저장소 옵션(신규, 재실측 2026-07-05 #2)** | **REAL(선택지 3단)** | `server/index.mjs`(591줄) — `JB_DB_DRIVER` env로 `JsonRepository`(파일 JSON, 기본값)와 `SupabaseRepository`(env 키 필수, `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` 미설정 시 즉시 throw)를 전환. `npm run backend`로 기동, 320줄 Node 테스트(`tests/backend/server.test.mjs`)로 검증. 프런트 `app/`은 기본적으로 여전히 `localStorage` 독립 — server/는 별도 옵트인 API 계층으로 병존 |
+| **Ollama 로컬 모델 실연동(신규, 재실측 2026-07-05 #2)** | **REAL(opt-in) / 기본 mock 유지** | `scripts/ollama-agent-proxy.mjs`(:8030, 179줄) — 승인단정·금리한도·신용평가 3종 정규식 금지패턴 필터 내장, `/agent/run`·`/agent/models` 엔드포인트. `app/agentModelSettings.js` 토글 UI. 단 CCR/RM 하네스의 **주 판단·초안 루프는 여전히 결정론적 mock**(`recordCorporateCreditAgentRun`/`recordRmOfficerAgentRun`) — Ollama는 하네스 뷰의 별도 "샘플 요청" 버튼(`runCorporateCreditOllamaSampleRequest`/`runRmOfficerOllamaSampleRequest`)에서만 트리거되는 opt-in 경로 |
+| **`corporate-credit` 하네스 이중등록 버그(신규 발견, 재실측 2026-07-05 #2)** | **버그 — 구조적 결함** | §12 참고. `harnessRegistry.js`의 두 번째 `id:"corporate-credit"` 블록이 로드되지 않는 `cclConsole.*` 심볼을 참조해 `ReferenceError`로 중단 → 같은 파일 내 `fds-response` 등록이 통째로 누락되어 FDS 콘솔의 훅 가드레일이 상시 무력화(`{ok:true}` 고정 반환) |
 
 ---
 
@@ -231,3 +244,43 @@ grep -c "test(" ../tests/e2e/*.spec.js                              # 60 (e57b82
 ### 9.2 /llm 게이트웨이 (참고 — 필요 시 파일 복사)
 
 예선 레포 `02_제품/scripts/api-proxy.mjs`에 구현·검증 완료(단일 파일, 의존성 0): claude✓/codex✓/ollama✓ 3엔진 + 폴백 사다리 + JSONL 원장 + `/llm/usage` 집계. JB_project2에서 로컬모델 연동 시 이 파일을 그대로 가져가 `OLLAMA_BASE`만 맞추면 됨. Docker 물리분리 구성은 `02_제품/deploy/`(compose+런북).
+
+---
+
+## 10. 백엔드 저장소 옵션(`server/`) — 신규(재실측 2026-07-05 #2)
+
+`server/index.mjs`(591줄)가 정적 파일 서빙 + REST API를 함께 제공한다. 저장 드라이버는 `JB_DB_DRIVER` 환경변수(`server/index.mjs:234`)로 3단 선택:
+
+| 드라이버 | 조건 | 구현 |
+|---|---|---|
+| `json`(기본값) | env 미설정 시 | `server/lib/repository.mjs`(93줄) `JsonRepository` — `server/data/localguard-db.json` 파일에 append |
+| `supabase` | `JB_DB_DRIVER=supabase` | `server/lib/supabaseRepository.mjs`(138줄) `SupabaseRepository` — `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY`(or `SUPABASE_SECRET_KEY`) **env 필수, 미설정 시 즉시 `throw`**(코드에 키 하드코딩 없음, 실측 확인). URL만 기본값(`DEFAULT_SUPABASE_URL`)이 코드에 있고 키는 없음 |
+| (미지정 값) | 그 외 | `unsupported JB_DB_DRIVER` 에러 |
+
+`npm run backend`(`node server/index.mjs`)로 기동, `npm run backend:test`(`node --test tests/backend/*.test.mjs`)로 320줄 테스트 검증. `sql/supabase-api-state.sql`(27줄)이 Supabase 쪽 테이블 스키마. **주의**: 프런트 `app/*.js`는 이 백엔드와 자동 연동되지 않는다 — 여전히 브라우저 `localStorage`가 기본 저장소이고, `server/`는 별도로 기동해야 하는 옵트인 API 계층이다(프런트가 이 API를 호출하는 코드는 이번 실측 범위에서 확인되지 않음, `[미확인]`).
+
+## 11. Ollama 로컬 모델 실연동 경로 — 신규(재실측 2026-07-05 #2)
+
+`scripts/ollama-agent-proxy.mjs`(179줄, :8030)가 로컬 Ollama(:11434)를 중계한다. 응답 텍스트에 대해 3종 정규식 금지패턴 필터 내장(`FORBIDDEN_PATTERNS`, ollama-agent-proxy.mjs:12-14): 승인/거절 단정, 금리/한도 산정, 신용평가 단정 — 매치 시 위반 목록을 응답에 포함해 반환(차단이 아니라 플래그, `[확인]`).
+
+`app/agentModelSettings.js`(238줄)가 프런트 토글: `localStorage` 키 `jb-agent-model-settings-v1`에 `runtime: "mock" | "ollama"` 저장. **주의할 점** — 코드 상 `AGENT_MODEL_DEFAULTS.runtime`의 리터럴 기본값은 `"ollama"`(agentModelSettings.js:6, 즉 `localStorage`에 아무것도 없는 최초 상태에서는 이 값)이지만, 실제 실행 경로는 다음 두 가지뿐이라 이것이 자동 실행을 의미하지 않는다:
+- `corporateCreditServices.js:302 runAgentModelRequest(...)`(no `forceOllama`) — 하네스 뷰의 "샘플 요청" **버튼 클릭 시**(`corporateCredit.view.harness.js:53`)에만 호출. 프록시가 안 떠 있으면 fetch 실패로 안전 종료.
+- `rmOfficerServices.js:445-457 runAgentModelRequest(..., { forceOffline: false, forceOllama: true })` — 마찬가지로 RM 하네스 뷰의 별도 버튼(`rmOfficer.view.harness.js:327`)에서만 호출, `forceOllama: true`로 runtime 설정과 무관하게 강제 실행되지만 이 역시 버튼을 눌러야 발생.
+
+즉 **CCR/RM의 주 판단·초안 생성 루프(`recordCorporateCreditAgentRun`/`recordRmOfficerAgentRun`, 일반 케이스 처리 시 호출)는 여전히 결정론적 mock**이고, Ollama 실호출은 하네스 화면의 명시적 "샘플 요청" 버튼을 통해서만 일어나는 opt-in 시연 경로다 — "기본값이 mock이 아니다"와 "기본 흐름이 mock이다"는 서로 다른 사실이며, 후자가 실제 동작을 지배한다.
+
+## 12. 구조적 결함 — `corporate-credit` 하네스 이중등록 (신규 발견, 재실측 2026-07-05 #2, 코드로 재현 확인)
+
+**증상**: `app/harnessRegistry.js`에 `registerHarness({ id: "corporate-credit", ... })` 호출이 **두 번** 있다(6행: 신규 CCR 기반, 163행: 구 cclConsole 기반). `harnessStore.manifests`는 `id`를 키로 하는 단순 객체(harnessCore.js:18-24)라 나중 호출이 이전 등록을 덮어써야 정상이지만, **두 번째 호출은 실행되지 않는다**.
+
+**원인**: 163행 블록이 참조하는 `CCL_ROLE_KEY`, `CCL_DISPLAY_NAME`, `CCL_ROUTE_BASE`, `cclNavigation`, `cclConsoleAgents`, `cclConsoleSkills`, `cclConsoleHooks`, `cclConsoleRules`, `cclConsoleHarness`, `CCL_DB_KEY`, `cclTable`는 전부 `app/cclConsole.core.js`·`cclConsole.data.js`·`cclConsole.app.js`(3파일, 921줄)에 정의돼 있는데, **이 3개 파일은 `index.html`에 `<script>` 태그가 없어 브라우저에 전혀 로드되지 않는다**(실측: `index.html` 전체 65개 script 태그 목록에 `cclConsole` 문자열 0건). 재현: 이 보고서 작성 중 Node `vm` 모듈로 `index.html`의 스크립트 로드 순서를 그대로 재생한 결과 `ReferenceError: CCL_ROLE_KEY is not defined`가 `harnessRegistry.js` 실행 중 발생함을 직접 확인했다.
+
+**여파**: 브라우저에서 스크립트 태그는 파일 단위로 독립 실행되므로 이 에러가 다른 `<script>` 파일 실행을 막지는 않지만, **`harnessRegistry.js` 파일 자체는 그 지점에서 실행이 중단**된다. 그 결과 같은 파일 내 163행 이후에 있던 등록들이 전부 스킵된다:
+- `id: "fds-response"`(199행) — **한 번도 등록되지 않음**. `getHarness("fds-response")`는 항상 `null`.
+- 중복 `id: "rm-officer"`(236행, 내용은 47행과 동일한 것으로 보이는 merge 잔재) — 스킵되지만 47행 등록이 이미 있어 무해.
+
+`fds-response`가 등록되지 않은 실질 영향: `app/fdrConsole.data.js:180-181`이 `harnessRunHooks("fds-response", hookName, payload)`를 호출하는데, `harnessCore.js:41-42`의 `getHarness(harnessId)`가 `null`을 반환하면 `handlers`가 빈 배열로 처리되어 **`{ ok: true, violations: [] }`가 항상 반환된다** — 즉 FDS(보이스피싱/이상거래대응) 콘솔의 `beforeCaseCreate`/`beforeAgentRun`/`beforeCustomerMessage` 훅 가드레일(PII/금지표현 검사 등)이 **코드가 존재함에도 실행 자체가 되지 않는 상태**다. FDS 콘솔 UI 자체(`fdrConsole.*`)는 harnessRegistry와 무관하게 app.js의 자체 뷰 라우팅으로 정상 렌더된다 — 화면은 멀쩡해 보이지만 훅 가드레일만 조용히 무력화된 상태라 발견이 어렵다.
+
+**"corporate-credit이 몇 개인가" 판정**: 실질적으로 **1개(CCR)**. 두 번째 등록이 코드 로드 실패로 무산되는 "사고"로, `harnessStore.manifests["corporate-credit"]`는 첫 번째(CCR, 6행) 등록이 그대로 유지된다 — 그리고 이는 실제 라이브 렌더 경로(app.js가 참조하는 `corporateCreditDashboardPage`/`corporateCreditHarnessPage`, 모두 CCR 파일 소속)와 일치한다. `cclConsole.*.js`(921줄)는 이제 색인·등록 양쪽에서 완전히 죽은 코드다. **원인 추정(코드·커밋 로그 근거)**: `3e269ae`("기업여신 역할을 독립 하네스로 운영하기 위해")가 CCR 파일군 + `harnessRegistry.js`에 신규 블록을 추가했고, 이후 `b80459c`("원격 변경을 받아도 RM 최신 하네스 흐름이 유지되게 한다")가 origin/main 병합 과정에서 구버전 `harnessRegistry.js`(cclConsole 기반 corporate-credit + fds-response + rm-officer)를 완전히 대체하지 못하고 신·구 블록을 이어붙인 것으로 보인다(`[추정] — 커밋 diff로 확정 가능하나 이번 실측 범위 밖`).
+
+**권고(실측 범위 밖, 참고용)**: (a) `harnessRegistry.js`의 163~197행(cclConsole 기반 corporate-credit 블록)과 235~272행(중복 rm-officer 블록) 삭제, (b) `cclConsole.core.js`/`cclConsole.data.js`/`cclConsole.app.js` 삭제 또는 격리, (c) `fds-response` 등록을 정상 실행되는 위치로 복구.

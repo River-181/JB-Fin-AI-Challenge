@@ -113,6 +113,8 @@ sequenceDiagram
 - [ ] 케이스 1건당 최소 4개 이벤트타입이 감사에 기록(성공지표 "케이스당 감사이벤트 4건 이상" 연동) [E3, prd §6].
 - [ ] `USR-`로 시작하지 않는 결재자는 `afterApprovalDecision`에서 차단 [E4].
 
+> **RM 하네스 확장(참고) [E4, 8c274b5]**: `rmOfficer.*` 콘솔은 위 CCL 골든패스와 별도로 케이스 실행뷰에 "모의 실행 / Ollama 로컬 모델 실행" 토글(`agentModelSettings.js`)을 추가했다 — ollama 선택 시 `runAgentModelRequest`가 로컬 프록시(:8030)를 호출하고 실패하면 사람 검토로 안전 강등한다. 산출물은 CCL과 동일하게 서버 미배선 상태로 `localStorage`에만 남으며, 서버 저장 옵션은 [[08_본선/03_제품/docs/07_architecture|07_architecture §6 Storage]] 참조.
+
 ---
 
 ## 3. Agent sequence (에이전트 시퀀스 — 판단→행동초안→검증)

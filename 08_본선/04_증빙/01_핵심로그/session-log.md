@@ -264,3 +264,11 @@ aliases:
 - **역정정(중대)**: "RM=단일 페이지" 판정은 레거시 rmDashboardPage 오인 — 실제는 **rm-officer 완전 하네스 콘솔(16뷰·에이전트 11·스킬 11·키보드 퍼스트·인라인 승인)**. 7문서+메모리 정정 → **역할 콘솔 총 5종**이 정확한 표현(과소 기술 해소).
 - **K 재실측(0226bd6)**: app 55파일/27,516줄·총 114뷰·에이전트 51/스킬 39·e2e 63시나리오. 핵심 발견: 역할=RM 트리거가 rm-officer로 재배선(레거시는 고아 라우트), rmoTable 동일 scope 계약, RM도 LLM 출력은 MOCKED(fetch 2건뿐), RMO_FORBIDDEN_OUTPUTS 팩토리(타 콘솔에 없는 패턴), RM 스크립트 최우선 로드.
 - **승보 신규 커밋**: 사용자 보고 있었으나 원격 미도착(LSB-afk 마지막 push 7/4 22:06, 브랜치·PR 변화 없음) — push 후 재확인 대기.
+
+### 2026-07-05 · 8c274b5 델타 정렬 사이클 (Fable + L/M/N + 직접 2건)
+- **델타**: 승보 push 04:57 KST(10커밋 +12,034줄) — server/ 백엔드(JSON·Supabase opt-in)·ollama-agent-proxy(:8030, 금지패턴 4종 관문 필터)·agentModelSettings(mock↔ollama 토글, 실행은 opt-in 버튼)·corporateCredit(CCR) 15파일이 cclConsole 대체·fdrConsole 로드 제거·RM 상세/MD뷰어 고도화.
+- **N**: 발표 3종 델타 주입(+10줄) — 보너스컷 Ollama 토글[조건부]·pitch Ev·judge-qna Q16-4(게이트웨이 이중화=관문 통제 원칙의 독립 구현 2개).
+- **M**: docs 6종+로드맵 2종 몇 줄 갱신(P0 "옵션A로 굳어짐" 정정→opt-in 백엔드 등장으로 재개방[미배선]). ollama=opt-in 판정.
+- **직접**: business-model KR표에 Ollama 실연동 행·metrics↔통계카탈로그 상호참조.
+- **🚨 버그 발견·보고**: harnessRegistry 잔존 등록(cclConsoleAgents 참조)→ReferenceError→후속 하네스(fds-response 등) 미등록·FDS 가드 조용히 무력화 — 독립 재검증 후 **issue LSB-afk/JB_project2#3** 제출. **PR#2 호환성 파탄**(cclConsoleHooks 소멸→memoryCards 조용한 no-op) — PR#2에 리베이스 필요 작업 3단계 코멘트(1·3은 우리가 처리 제안).
+- 재발방지: AGENTS.md 코드 추적 규칙(fetch 의무·확정 판정 전 push 확인) 명문화.

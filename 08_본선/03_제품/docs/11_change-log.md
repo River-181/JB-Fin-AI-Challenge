@@ -36,6 +36,7 @@ aliases:
 | F-08 | **도메인 폭** | 여신(SME) 단일 | **다도메인** — 은행: 여신·전세보호·보이스피싱 / 캐피탈: 여신심사·사후관리(EWS) | 확장 | [[키스톤-확정]] 하이브리드 조합, 7/3 사용자 승인 | E1(조합 확정)·전세/피싱 실동작 [조건부/7-4] |
 | F-09 | **운영계약** | (암묵) | `Case→AgentRun→Agent→Skill→Evidence→Approval→Audit` **명시적 커널**, `computeRiskDecision`·`buildDashboardData`·`auditChainRecords`·`moveCaseToColumn` 4함수계약 | 정식화 | `_canon.md`·`07_architecture.md`, 확정 스냅샷 | E4 |
 | F-10 | **운영 관측(비용·오류·감사)** | (없음 — 토큰 통계는 정적 목업) | `POST /llm` 게이트웨이(claude/codex CLI 라우팅+폴백 사다리+JSONL 원장) · 토큰 실측 패널(케이스 단가·RM 월 환산, `?live=1`) · 감사 용도 태그(`auditPurpose`) | 신규 | Q13~Q15(`00_결정-준비/질문/`)·`api-proxy.mjs`·feature-spec 기능군7, 2026-07-04 | E4 |
+| F-12 | **서버 백엔드·로컬 모델 실연동·RM 고도화** | (없음 — 전 계층 `localStorage`, LLM 미연동) | `server/index.mjs`(JSON/Supabase opt-in 저장소) · `scripts/ollama-agent-proxy.mjs`(:8030)+`agentModelSettings.js`(mock↔ollama 토글) · `corporateCredit.*` 15파일(기업여신 신규 독립 하네스) · RM 상세 패널·MD 뷰어 고도화 | 신규(원격 8c274b5 델타, +12,034줄) | `_vendor/JB_project2` 8c274b5, [[08_본선/03_제품/reports/구현현황-JB_project2\|구현현황-JB_project2]] §10~§12 | E4 |
 
 > ⚠️ **미반영·충돌 주의(§C 참조)**: F-08의 "사후관리(EWS)"는 승보 프로토타입 코드에 **아직 도메인 없음**(JBWC 11도메인에 미포함) → 편입 확정 시 12번째 도메인 신규 필요 [미구현]. F-01/F-08의 "전세보호"는 코드상 **별도 role 하네스**로 구현돼 키스톤 교정("전세=기존 직군의 도메인")과 **직접 충돌**([[승보-프로토타입-반영]] §6.2) → 7/4 팀 결정 대기.
 

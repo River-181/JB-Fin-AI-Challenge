@@ -49,6 +49,8 @@ aliases: [MVP Scope, 본선 MVP 점검]
 
 관련 미결(같은 팀 결정 묶음): MCP 채택 여부, 담당자 설정(config) 허용 범위, 승인 직군 2(RM·준법) 유지 vs 확대.
 
+**RM Ollama 토글 시연 옵션 [조건부, E4 코드/미리허설]**: `agentModelSettings.js`의 mock↔ollama 실행 토글(:8030)이 코드로는 동작하나, 데모 PC 리허설 전까지는 발표 시연 항목으로 확정하지 않는다.
+
 ---
 
 ## MVP 제외 기능

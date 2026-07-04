@@ -19,6 +19,8 @@ up: "[[INDEX|제품 인덱스]]"
 
 이 콘솔의 도메인은 **기업여신·소상공인 대출 검토**다. AI는 요약·체크·초안만 만들고, 결정(승인/거절·금리·한도·신용등급)은 항상 사람 담당자가 한다 [E4, `cclConsole.core.js:1-3`]. 차별성 척추의 4관점 중 **직원(EX)·조직(조직도/감독)·고객(BIZ-REF 비식별 대응)·그룹(계열사 스코프 격리)**이 모두 이 도메인 안에서 엔티티로 드러난다.
 
+> **서버 백엔드 신설(각주) [E4, 8c274b5]**: `server/lib/seed.mjs`/`repository.mjs`가 다루는 상태는 위 localStorage 테이블과 별개 스키마다 — `roles`(콘솔별 역할 5종)·`cases`·`agentRuns`·`deliverables`·`auditLogs`·`files` 6개 컬렉션을 JSON 파일(`JsonRepository`) 또는 Supabase(`SupabaseRepository`, `server/sql/supabase-api-state.sql`)로 영속화한다. 브라우저 앱과의 데이터 연동은 아직 배선되지 않았다 [미검증].
+
 ---
 
 ## 1. Actors

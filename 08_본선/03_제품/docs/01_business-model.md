@@ -86,6 +86,7 @@ Key Data는 부가 기능이 아니라 이 사업의 **해자(moat)**다. 범용
 | 승인 게이트 UI(Enter Flow) | Enter=진행, Enter·Enter=예외, Click=최종승인 | 결정-현황-종합 ✅ | [검증됨] |
 | 감사체인(Audit chain) | 나선형 성장의 로그 원천, 법적 증거력(append-only·해시) | risk-impact-register RISK-GOV-004 | [검증됨] |
 | llama-server(llama.cpp, Metal GPU 가속) | 로컬 추론 엔진 즉시 가동 가능 | 실동작-데모-증거팩 [E4] | [검증됨] |
+| Ollama 실연동 경로(콘솔 mock↔Ollama 토글 + :8030 프록시, 금지패턴 관문 필터) | 로컬 추론의 opt-in 실행 경로가 코드로 존재 | JB_project2 8c274b5 `agentModelSettings.js`·`ollama-agent-proxy.mjs` [E4] | [검증됨/opt-in] |
 
 **로컬모델 손익분기점(TCO)**: 저가 API 대비 로컬 손익분기점은 월 수십억~약 97억 토큰으로 매우 늦다(D22/D23). JB형 기준 사용량(월 0.863억 토큰)에서는 API가 로컬보다 저렴하다 — **로컬모델 채택의 실제 근거는 비용 절감이 아니라 원본 PII 비반출·규제 준수**다(결정-현황-종합, `[확정/E2]`). 이 문구는 발표에서 반드시 이 순서로 말해야 방어된다.
 

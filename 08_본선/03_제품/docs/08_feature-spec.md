@@ -25,6 +25,7 @@ aliases: [Feature Spec, 기능 명세]
 - 선행 Wave1 문서(PRD·agent-roster·키스톤)의 JBG-104 표기는 구 코드 잔재로, 모두 CCL-0001로 정정 대상이다.
 - 남은 사항(케이스 코드 네이밍): 두 계열사·다도메인 확장 시 네이밍 규약(`{계열사}{도메인}-{seq}`?)을 `rules/naming-rules.md`에서 잠글 것 **[미결/7-4]**. 히어로 ID 이원화 자체는 종결됨.
 - **코드 정본 현행(2026-07-05)**: JB_project2 = 역할 콘솔 5종(CCL/FDR/JPO/JBWC/RM) + 가드레일 5종 E4. PR#1(ccl-financial)·PR#2(메모리 카드+LLM 게이트웨이) **OPEN 머지 대기**. 실태 색인: [[implementation-index]] · [[구현현황-JB_project2]].
+- **코드 정본 현행(2026-07-05 #2, HEAD 8c274b5)**: 기업여신 콘솔의 실라이브 코드가 `cclConsole.*`→`corporateCredit.*`(CCR, 15에이전트)로 전면 교체됨. 신규 `server/`(파일DB/Supabase 옵션 백엔드)·Ollama 실연동 프록시(opt-in, 기본은 여전히 mock) 추가. `harnessRegistry.js` 이중등록 버그로 `fds-response` 훅 가드레일이 상시 무력화된 구조적 결함 발견 — 상세는 [[구현현황-JB_project2]] §10~§12.
 
 ---
 
