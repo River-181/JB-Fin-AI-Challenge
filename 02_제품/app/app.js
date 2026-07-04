@@ -4715,7 +4715,7 @@ function renderAudit() {
         <article class="audit-item">
           <span class="audit-time">#${record.seq} · ${escapeHtml(record.time)}</span>
           <p>${escapeHtml(record.actor)} · ${escapeHtml(localizeLine(record.action))}</p>
-          <small>prev ${escapeHtml(record.previousHash)} → hash ${escapeHtml(record.hash)} · 근거 ${escapeHtml(record.evidenceId)}</small>
+          <small>prev ${escapeHtml(record.previousHash)} → hash ${escapeHtml(record.hash)} · 근거 ${escapeHtml(record.evidenceId)} · 용도 ${escapeHtml(record.purpose)}</small>
         </article>
       `,
     )
@@ -4751,10 +4751,20 @@ function auditChainRecords(item) {
     const evidenceId = Array.isArray(entry) ? evidenceIds[index % Math.max(1, evidenceIds.length)] || "internal-event" : entry.evidenceId;
     const payload = JSON.stringify({ seq: index + 1, time, actor, action, target: item.code, evidenceId, previousHash });
     const hash = simpleHash(payload);
-    const record = { seq: index + 1, time, actor, action, target: item.code, evidenceId, previousHash, hash };
+    const record = { seq: index + 1, time, actor, action, target: item.code, evidenceId, previousHash, hash, purpose: auditPurpose(action) };
     previousHash = hash;
     return record;
   });
+}
+
+// 감사 로그 소비자 태그 — "소비자 없는 로그는 남기지 않는다" 원칙(Q15)의 화면 증적.
+// 당국 증적=사람 최종승인 이력 / 운영 점검=오류·폴백 패턴 / 원가 정산=토큰 비용 / 분쟁 재생=판단 근거 체인 재구성.
+function auditPurpose(text) {
+  const value = String(text || "");
+  if (/승인|반려|보류|발송|고객/.test(value)) return "당국 증적";
+  if (/검증|오류|재시도|차단|폴백/.test(value)) return "운영 점검";
+  if (/토큰|비용|예산/.test(value)) return "원가 정산";
+  return "분쟁 재생";
 }
 
 function inferAuditActor(text) {

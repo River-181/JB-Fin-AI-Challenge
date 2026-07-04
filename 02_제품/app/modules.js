@@ -482,6 +482,72 @@ const tokenUsage = {
 };
 const tokenPeriodLabels = { daily: "일간", weekly: "주간", monthly: "월간" };
 
+/* 실측 LLM 게이트웨이 사용량 — ?live=1 + npm run demo:proxy 기동 시에만 표시 (Q13/Q14 물증) */
+let liveLlmUsage = null;
+const KRW_PER_USD = 1400; // ponytail: 고정 환율 [가정], 재무 정산 연동 시 교체
+const RM_CASES_PER_DAY = 20; // RM 1인 일 처리 케이스 [가정, Q13]
+const WORKDAYS_PER_MONTH = 21;
+
+async function fetchLlmUsage() {
+  const cfg = window.RUNTIME_CONFIG;
+  if (!cfg || !cfg.liveApi) return;
+  try {
+    const r = await fetch(`${cfg.apiProxyBase}/llm/usage`);
+    if (r.ok) {
+      const next = await r.json();
+      // 새 호출이 생겼을 때만 재렌더 (엔진룸 라이브 갱신, 불필요한 화면 흔들림 방지)
+      const changed = next && next.totals && (!liveLlmUsage || !liveLlmUsage.totals || next.totals.calls !== liveLlmUsage.totals.calls);
+      liveLlmUsage = next;
+      if (changed && next.totals.calls && window.render) render();
+    }
+  } catch (_) { /* 프록시 미기동 → 정적 통계만 표시 */ }
+  setTimeout(fetchLlmUsage, 5000); // 엔진룸 폴링 (라이브 모드에서만 도달)
+}
+window.addEventListener("load", fetchLlmUsage);
+
+/* 엔진룸 — 최근 호출 타임라인 (백엔드가 어떻게 돌았는지 화면으로 증명) */
+function engineRoomRows(u) {
+  const recent = (u.recent || []).slice(-8).reverse();
+  if (!recent.length) return "";
+  const rows = recent.map((r) => {
+    const mark = r.escalated ? "🚨" : r.errorClass ? "⚠" : "✓";
+    const left = `${mark} ${escapeHtml(r.engine || "사람 큐")} · ${escapeHtml(r.caseId || "-")}`;
+    const bits = [`${r.latencyMs || 0}ms`, formatTokens((r.tokensIn || 0) + (r.tokensOut || 0))];
+    if (r.fallbackPath) bits.push(`폴백 ${escapeHtml(r.fallbackPath)}`);
+    if (r.errorClass) bits.push(escapeHtml(r.errorClass));
+    return `<div class="token-live-row"><span>${left}</span><span>${bits.join(" · ")}</span></div>`;
+  }).join("");
+  return `<span class="token-live-title">엔진룸 · 최근 호출 (5초 갱신)</span>${rows}`;
+}
+
+function liveLlmBlock() {
+  const u = liveLlmUsage;
+  if (!u || !u.totals || !u.totals.calls) return "";
+  const t = u.totals;
+  const krw = Math.round((t.costUsd || 0) * KRW_PER_USD);
+  const caseIds = Object.keys(u.byCase || {});
+  const perCaseKrw = caseIds.length ? Math.round(krw / caseIds.length) : krw;
+  const monthlyKrw = perCaseKrw * RM_CASES_PER_DAY * WORKDAYS_PER_MONTH;
+  const tierNames = { local: "로컬", frontier: "프런티어" };
+  const tierRow = Object.entries(u.byTier || {})
+    .map(([k, v]) => `${tierNames[k] || k} ${formatTokens((v.tokensIn || 0) + (v.tokensOut || 0))}`)
+    .join(" · ");
+  const caseRows = caseIds.slice(0, 5).map((id) => {
+    const v = u.byCase[id];
+    return `<div class="token-live-row"><span>${escapeHtml(id)}</span><span>${v.runs}회 · ${formatTokens((v.tokensIn || 0) + (v.tokensOut || 0))} · ₩${Math.round((v.costUsd || 0) * KRW_PER_USD).toLocaleString("ko-KR")}</span></div>`;
+  }).join("");
+  return `
+    <div class="token-live">
+      <span class="token-live-title">실측 · LLM 게이트웨이 (라이브)</span>
+      <div class="token-live-row"><span>성공 ${t.runs}회 · 오류 ${t.errors}회 · 사람 큐 격상 ${t.escalated}회</span><span>${tierRow || "-"}</span></div>
+      ${caseRows}
+      <div class="token-live-row"><span>케이스 평균 단가</span><span>₩${perCaseKrw.toLocaleString("ko-KR")}</span></div>
+      <div class="token-live-row"><span>RM 1인 월 환산</span><span>₩${monthlyKrw.toLocaleString("ko-KR")}</span></div>
+      <span class="token-live-note">환산 가정: 일 ${RM_CASES_PER_DAY}케이스 × 월 ${WORKDAYS_PER_MONTH}영업일 · 환율 ${KRW_PER_USD}원 [가정] · 원장 llm-runs.jsonl</span>
+      ${engineRoomRows(u)}
+    </div>`;
+}
+
 function formatTokens(n) {
   if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
   if (n >= 1000) return Math.round(n / 1000) + "K";
@@ -523,7 +589,66 @@ function tokenStatsView() {
           <span class="io-leg"><i class="io-dot out"></i>출력 ${formatTokens(totalOut)} · ${outRate}%</span>
         </div>
       </div>
+      ${liveLlmBlock()}
     </div>`;
+}
+
+/* =========================================================================
+ * 운영계약 온톨로지 그래프 — Case–Agent–Evidence–산출물–Approval–Audit 를
+ * 이 케이스의 실데이터로 관계 그래프 렌더 (cytoscape, 로컬 벤더링·오프라인 동작)
+ * ========================================================================= */
+let cyOntology = null;
+
+function ontologyElements(c) {
+  const els = [];
+  const edge = (s, t, label) => els.push({ data: { id: `${s}->${t}`, source: s, target: t, label } });
+  els.push({ data: { id: "case", label: `${c.code}\n${c.customerName}`, kind: "case" } });
+  const agentList = (typeof agents !== "undefined" ? agents : []).filter((a) => (c.agents || []).includes(a.id));
+  agentList.forEach((a) => {
+    els.push({ data: { id: `ag-${a.id}`, label: window.agentLabel ? agentLabel(a) : a.name, kind: "agent" } });
+    edge("case", `ag-${a.id}`, "AgentRun");
+  });
+  (c.evidenceIds || []).forEach((ev) => {
+    els.push({ data: { id: `ev-${ev}`, label: ev, kind: "evidence" } });
+    edge("case", `ev-${ev}`, "Evidence");
+  });
+  deliverablesForCase(c.id).forEach((d, i) => {
+    els.push({ data: { id: `dl-${i}`, label: d.title, kind: "deliverable" } });
+    edge("case", `dl-${i}`, "산출물");
+  });
+  const lbl = window.statusLabel ? statusLabel(c.status) : c.status;
+  els.push({ data: { id: "approval", label: `승인 게이트\n${lbl}`, kind: "approval" } });
+  edge("case", "approval", "Approval");
+  els.push({ data: { id: "audit", label: `감사 원장\n${(c.audit || []).length}건`, kind: "audit" } });
+  edge("approval", "audit", "Audit");
+  return els;
+}
+
+function initCaseOntology(c) {
+  const el = document.getElementById("case-ontology-graph");
+  if (!el || typeof cytoscape === "undefined" || !c) return; // 라이브러리 미로드 시 조용히 생략
+  if (cyOntology) { try { cyOntology.destroy(); } catch (_) { /* noop */ } }
+  cyOntology = cytoscape({
+    container: el,
+    elements: ontologyElements(c),
+    layout: {
+      name: "concentric",
+      concentric: (n) => (n.data("kind") === "case" ? 3 : n.data("kind") === "agent" ? 2 : 1),
+      levelWidth: () => 1,
+      padding: 16,
+    },
+    style: [
+      { selector: "node", style: { label: "data(label)", "text-wrap": "wrap", "text-max-width": 90, "font-size": 10, "font-family": "Pretendard, sans-serif", "text-valign": "center", color: "#1f2937", "background-color": "#e5e7eb", width: 48, height: 48 } },
+      { selector: 'node[kind="case"]', style: { "background-color": "#0f4c92", color: "#ffffff", width: 80, height: 80, "font-size": 11 } },
+      { selector: 'node[kind="agent"]', style: { "background-color": "#3b82f6", color: "#ffffff" } },
+      { selector: 'node[kind="evidence"]', style: { "background-color": "#10b981", color: "#ffffff" } },
+      { selector: 'node[kind="deliverable"]', style: { "background-color": "#f59e0b" } },
+      { selector: 'node[kind="approval"]', style: { "background-color": "#ef4444", color: "#ffffff" } },
+      { selector: 'node[kind="audit"]', style: { "background-color": "#6b7280", color: "#ffffff" } },
+      { selector: "edge", style: { label: "data(label)", "font-size": 8, "curve-style": "bezier", "target-arrow-shape": "triangle", width: 1.5, "line-color": "#cbd5e1", "target-arrow-color": "#cbd5e1" } },
+    ],
+    wheelSensitivity: 0.2,
+  });
 }
 
 /* =========================================================================
@@ -537,6 +662,7 @@ function caseDetailPage(caseItem) {
   const agentList = (typeof agents !== "undefined" ? agents : []).filter((a) => (c.agents || []).includes(a.id));
   const deliverables = deliverablesForCase(c.id);
   const isPending = c.status === "Approval Pending";
+  setTimeout(() => initCaseOntology(c), 0); // 렌더 후 그래프 마운트 (컨테이너가 DOM에 생긴 뒤)
 
   // 자율운영 타임라인 단계
   const steps = [
@@ -619,6 +745,12 @@ function caseDetailPage(caseItem) {
     <section class="panel">
       <div class="panel-head"><h3>산출물 (실제 결과물)</h3><span class="status-badge">${escapeHtml(String(deliverables.length))}건</span></div>
       <div class="dlv-grid">${dlvCards}</div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h3>운영계약 온톨로지</h3><span class="status-badge">Case→Agent→Evidence→Approval→Audit</span></div>
+      <div id="case-ontology-graph" class="ontology-graph" role="img" aria-label="이 관리 건의 엔티티 관계 그래프"></div>
+      <p class="dlv-meta">이 관리 건의 실데이터가 관계 그래프로 렌더됩니다 — 드래그·줌 가능. 백엔드 엔티티 연결을 눈으로 확인하는 뷰.</p>
     </section>
 
     ${governancePanelMarkup(c)}
