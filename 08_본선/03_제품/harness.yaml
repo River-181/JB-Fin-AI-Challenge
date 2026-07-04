@@ -76,7 +76,7 @@ pii_policy:
 demo:
   product: "_vendor/JB_project2 (npm run dev → :8000)"
   hero: "전북은행 → 기업여신 → CCL-0001"
-  live_agent: "?live=1 (ccl-financial 실 LLM; Ollama exaone3.5:7.8b / Anthropic). 오프라인=목업 폴백"
+  live_agent: "?live=1 (ccl-financial 실 LLM, CCL-0001·PR#1). 모델 선택 게이트웨이 — 어드민이 로컬모델(exaone3.5:7.8b 등)/claude/codex 중 선택, 로컬 우선·codex 폴백. 오프라인=목업 폴백"
   pr: "LSB-afk/JB_project2#1"
 
 release_bar:

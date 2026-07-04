@@ -34,7 +34,7 @@ aliases: [정의서, Definitions, 용어집, Naming Rules]
 | A9 | **성공 이벤트 (Success Event)** | 근거 100% 연결된 판단이 승인 게이트를 통과해 AuditEvent로 기록되고 triage가 착수되는 것. KPI: Triage 50% 단축 · Evidence traceability 100% · Approval safety 100% [E2+ 목표치, canon §3] | AuditEvent (status→approved) |
 | A10 | **실패 이벤트 (Failure Event)** | 불확실·위반 시 **fail-closed로 차단**되는 것 — 반출 스캔이 PII 원문 반출 차단, 승인 없는 발송 원천 차단, 확정판단 금지(전세사기·피해자결정·대출승인 단정) 위반 감지, 근거 누락. "불확실하면 닫는다"가 기본값 [E4, principles·승보-프로토타입 forbiddenAssertions] | AuditEvent (blocked) / RISK-ACTION-001 |
 | A11 | **MVP** | 운영 계약(Case→…→Audit) 전체를 브라우저에서 재현하는 콘솔. 4개 함수 계약(`computeRiskDecision`·`buildDashboardData`·`auditChainRecords`·`moveCaseToColumn`)이 데모의 뼈대이며 본선 목표는 이를 **서버 API로 1:1 승격** + 실 LLM 연결 [E4 현재/E0 서버승격, canon §8·CLAUDE.md] | 함수 계약 → 서버 API |
-| A12 | **Demo-ready** | 데모에서 실제로 동작함이 보장된 상태. **최소 1개(히어로 전주 카페)는 실 LLM 동작**, 나머지 도메인은 골든패스 실동작 지향. ⚠️ 로컬모델(Ollama)·Claude API는 미연결 상태였고 "3개 실동작"은 완성이 아니라 **개발 목표**로 정직하게 표기한다 [E0→E4 목표, 키스톤-확정 "정직한 전제"] | — (조건부) |
+| A12 | **Demo-ready** | 데모에서 실제로 동작함이 보장된 상태. **최소 1개(히어로 전주 카페, 김건우 CCL-0001)는 실 LLM 동작**(유지, 쇼케이스는 6페르소나로 확장), 나머지 도메인은 골든패스 실동작 지향. ⚠️ 런타임=**모델 선택 게이트웨이**(어드민이 claude/codex/로컬모델 중 선택, 로컬 우선·codex 폴백)이며, "3개 실동작"은 완성이 아니라 **개발 목표**로 정직하게 표기한다 [E0→E4 목표, 키스톤-확정 "정직한 전제"] | — (조건부) |
 
 > **정직성 규율**: A11·A12의 "서버 승격"·"3케이스 실동작"·"로컬모델 연결"은 발표·문서에서 **[목표/조건부]**로만 말한다. 완성으로 단정하면 안 됨(키스톤-확정 §정직한 전제). 성공/실패 KPI 수치(A9)는 canon §3 고정값을 그대로 인용한다.
 
