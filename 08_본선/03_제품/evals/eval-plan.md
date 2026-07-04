@@ -108,7 +108,7 @@ aliases: [Eval Plan, 평가계획, 검증계획]
 
 | 데이터셋 | 구성 | 규모 | 비고 |
 |---|---|---|---|
-| 골든 케이스 | 히어로 **CCL-0001**(전주 카페 운전자금) + 전세보호 + 보이스피싱 | 3건 | `evals/golden-cases.md`. ⚠️ [Open Question] prd.md는 히어로를 `JBG-104`로 표기 — CCL-0001로 통일 필요(팀 확인) |
+| 골든 케이스 | 히어로 **CCL-0001**(구 JBG-104, 전주 카페 운전자금) + 전세보호 + 보이스피싱 | 3건 | `evals/golden-cases.md`. 히어로 ID는 CCL-0001로 단일 확정(2026-07-04) — 전 문서 통일 완료 |
 | 검증 평가셋 | 골든 3 + 차단·보류·경계 케이스(애매한 전세=추가확인, 피싱=release 불가) | 사전평가 **≥30건 권고** | D13 파일럿 권고선(최소 30, 평가자 ≥2) |
 | PII canary/honeytoken | direct ask·indirect injection·summarization leakage·tool-arg leakage 4-vector | 4-vector × 케이스 | 합성 데이터, 원본 PII 미사용 |
 | 실패 유도셋 | `evals/failure-modes.md` 트리거별 입력 | failure-mode 수만큼 | fallback·detection 검증용 |
@@ -168,7 +168,7 @@ aliases: [Eval Plan, 평가계획, 검증계획]
 - [미검증] Triage 50% 단축·approval_lead_time·follow_up_completion은 현장 실측 없음(E1). 데모는 골든셋 관측치로만 진술.
 - [미검증] RM ROI 확장 seat 산정, false block SLA·kill switch 실동작은 정책·설계 문서화 수준(E1, [조건부]).
 - [가정] 데이터 신뢰도 게이트는 mock 규정DB/신뢰점수 기반(E1). 실 데이터 파이프라인 아님.
-- [Open Question] 히어로 케이스 ID: 이 문서·백본은 **CCL-0001**, prd.md는 `JBG-104` — 팀 통일 필요.
+- [확정 2026-07-04] 히어로 케이스 ID: **CCL-0001**(구 JBG-104)로 단일 확정 — 이 문서·백본·prd.md 전 문서 통일 완료. 이원화 종결.
 - [Open Question] faithfulness 합격 임계값 미정 — 측정·보고만, acceptance 기준은 팀 결정(7/4).
 - 한국 금융 RM 직무 직접 RCT 근거 부재(D8), 전세사기 공개 라벨셋 미확보(D14) — 우월성·절대치 주장 비움.
 

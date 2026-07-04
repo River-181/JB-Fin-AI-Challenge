@@ -38,6 +38,32 @@ stateDiagram-v2
 
 ---
 
+## 인시던트 대응 분기 (119) — [분기/미확정]
+
+> **미확정 [분기/미확정]**: 아래는 에이전트 실행 중 이상(오류·이상탐지·가드 위반·데이터 사고)이 감지됐을 때의 **대응·복구 서브플로**로, 코드 SSOT(`CCL_BOARD_COLUMNS` 등 4콘솔 board)에는 아직 없는 **설계 제안**이다. 정식 상태로 승격 전이며, 명칭·전이 조건·소유 엔티티(AgentRun vs Case)는 7/4 이후 확정 필요. "119"=긴급 대응 은유(자동 종결 금지·사람 에스컬레이션 원칙과 정합).
+>
+> 근거 훅: 실행 중 `harnessGuardCheckAutoClose`(high/critical 자동완료 차단)·`beforeAgentRun`/`afterAgentRun` 스코프·단정 가드가 위반을 잡으면 run을 `needsReview`로 강등한다 [E4]. 아래 분기는 그 강등을 **격리→재현→복구/에스컬레이션**의 명시 상태기계로 확장한 것 [E1, 미검증].
+
+```mermaid
+stateDiagram-v2
+    [*] --> AgentAnalyzed: 에이전트 실행 완료(run)
+    AgentAnalyzed --> IncidentDetected: 이상 감지(가드 위반·오류·이상탐지·데이터 사고)
+    AgentAnalyzed --> [*]: 정상 — 본 라이프사이클 계속
+    IncidentDetected --> Quarantined: 산출 격리(needsReview 강등·발송/종결 차단)
+    Quarantined --> Replayed: 결정형 골든패스로 재현(입력·근거 재검토)
+    Replayed --> Restored: 재현 일치 → 정상 상태 복귀(사람 확인)
+    Replayed --> Escalated: 재현 불일치·고위험 → 감독 에스컬레이션(사람 결정)
+    Restored --> [*]
+    Escalated --> [*]
+```
+
+- **격리(Quarantined)**: 인시던트 감지 시 해당 산출은 고객 발송·자동 종결 경로에서 즉시 배제 — `beforeCustomerMessage`/자동종결 가드와 동일 원칙 [E4].
+- **재현(Replayed)**: 라이브 LLM 장애·비결정성 대비, 결정형 골든패스로 동일 입력을 재실행해 산출 일치 여부를 확인(F-2.1.1 폴백과 연동) [E1].
+- **복구(Restored)/에스컬레이션(Escalated)**: 복구·종결 주체는 항상 사람(`USR-*`) — high/critical은 감독 에스컬레이션 강제 [E4 원칙, 상태 신설은 미확정].
+- 이 분기는 4개 역할 콘솔(CCL·FDS·전세보호·JB우리캐피탈) **공통 서브플로**로 설계하되, 콘솔별 board 컬럼 편입 여부는 [분기/미확정].
+
+---
+
 ## 상태별 허용 행동
 
 | 상태 | 허용 행동 | 금지 행동 |

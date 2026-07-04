@@ -7,7 +7,9 @@ date: 2026-07-04
 up: "[[INDEX|제품 인덱스]]"
 ---
 
-# 도메인 모델 — 역할축 여신 콘솔(CCL)
+# 도메인 모델 — 역할축 콘솔 4종 (CCL·FDS·전세보호·JB우리캐피탈)
+
+> §1~9 = CCL(기업여신) 정본. **§10 = FDS·전세보호·JB우리캐피탈 콘솔 확장**(콘솔별 Actors·States·Tables·Permissions 차이점).
 
 > **정합 대상**: [[08_본선/03_제품/04_tech/data-model|04_tech/data-model]](엔티티 필드 상세)·[[08_본선/03_제품/05_diagrams/04_erd|05_diagrams/04_erd]](ERD). 이 문서는 그 둘을 **읽어** 도메인 층(Actors·States·Events·Permissions·Data/Audit lifecycle·External systems)으로 정식화한 것이며, 두 원본을 덮어쓰지 않는다. 필드 세부가 어긋나면 04_tech/data-model이 필드 SSOT, 코드가 어긋나면 JB_project2 소스가 최종 SSOT다.
 >
@@ -203,6 +205,104 @@ D11 메모리 수명주기 `write → retrieve → update → consolidation → 
 - 장기 메모리 삭제·정정·재산출 인터페이스(프라이버시) [TBD]
 - ReviewNote `resolved` 상태·consolidation/forgetting 정책 [TBD]
 - 사이드바 "표면 5·내부 8" 라벨 ↔ 실제 8 에이전트 정합 [미검증]
+
+---
+
+## 10. 콘솔별 도메인 확장 — FDS·전세보호·JB우리캐피탈
+
+> §1~9는 **CCL(기업여신)** 도메인을 정식화한다. 본 콘솔은 **동일 운영 계약(`Case → AgentRun → Agent → Skill → Evidence → Approval → Audit`)** 을 role/affiliate 하네스로 복제해 3개 도메인을 더 굴린다. 각 하네스는 서로 business 로직을 alias하지 않고 **독립 registry**로 등록된다 [E4, `harnessRegistry.js`]. 아래는 §1~9의 축(Actors·States·Tables·Permissions·External)을 콘솔별로 **차이점 중심**으로 압축한 것 — CCL과 같은 원칙(사람 승인 게이트·PII 비반출·자동종결 금지)은 반복하지 않는다.
+>
+> **하네스 매니페스트 요약** [E4, `harnessRegistry.js`]:
+>
+> | 하네스 id | kind | 스코프 키 | 케이스 테이블 | 에이전트 | 훅 강제 | DB 키 |
+> |---|---|---|---|---|---|---|
+> | `corporate-credit`(CCL, §1~9) | role | `roleKey` | `ccl_cases` | 8 | O | `ccl-ops-db-v1` |
+> | `fds-response`(FDR) | role | `roleKey` | `fdr_cases` | 8 | O | `fdr-*` |
+> | `jeonse-protection`(JPO) | role | `roleKey` | `jeonse_cases` | 11 | O | `jpo-ops-db-v2` |
+> | `jb-woori-capital`(JBWC) | affiliate | `affiliateId` | `ops_cases` | 13 | ✗(다음 단계 TODO) | `jbwc-ops-db-v3` |
+
+### 10.1 FDS·보이스피싱 콘솔 (`fds-response` / `fdr_cases`) [E4]
+
+- **도메인**: 이상거래 탐지·보이스피싱 의심 대응. 케이스=고위험 이체·고령 고객 이상거래 경보. **CCL과의 핵심 차이**: 여신 심사가 아니라 **실시간 경보 처리**이며, 종결(`closedByHuman`)·지급정지·차단은 **항상 사람** — AI는 신호 요약·확인 스크립트·차단 권고까지만 [E4, `fdrConsole.core.js:99-107`].
+- **Actors·에이전트 로스터 8종** [E4, `fdrConsoleAgents`] — 표면 5(`FDR_SURFACE_AGENT_IDS`) + 내부 3:
+
+| id | 표시명 | domain | 성격 | 전용 금지 |
+|---|---|---|---|---|
+| `fdr-intake` | 경보 접수 분류 에이전트 | orchestration | 표면 | 자동 종결 |
+| `fdr-signal` | 이상거래 신호 요약 에이전트 | anomalySignals | 표면 | 사기 여부 확정 |
+| `fdr-elder` | 고령 고객 보호 에이전트 | elderGuard | 표면 | — |
+| `fdr-contact` | 고객 확인 스크립트 에이전트 | contactScripts | 표면 | 자동 발신 |
+| `fdr-block` | 차단·보류 검토 에이전트 | blockReview | 표면 | 차단/보류 실행 |
+| `fdr-pattern` | 거래 패턴 요약 에이전트 | patternSummary | 내부 | — |
+| `fdr-report` | 외부 신고 안내 에이전트 | paymentHoldGuide | 내부 | 신고 대행 |
+| `fdr-supervisor` | FDS 감독 검토 에이전트 | governance | 내부 | 자체 종결 |
+
+- **States (보드 컬럼 = 상태)** [E4, `FDR_BOARD_COLUMNS`]: `received(신규 경보) → analyzing(신호 분석) → humanReview(담당자 검토 필요) → contacting(고객 확인 중) → decision(차단·보류 결정 대기) → closedByHuman(종결·사람)`. 활성=`closedByHuman` 제외 5. **CCL과 달리 "고객 확인" 상태가 명시** — 송금 전 콜백 확인이 도메인 고유 단계.
+- **Tables**: `fdr_cases`·`fdr_signals`·`fdr_block_reviews`·`fdr_agent_runs`·`fdr_audit_logs` + 공용 `approvals`·`ai_recommendations`·`agent_handoffs` [E4, `fdrConsole.data.js`]. 알림유형 6종(`FDR_ALERT_TYPES`: 고액이체·고령이상거래·원격제어앱·대출빙자·신규기기다회이체·휴면후고액), 신호유형 8종(`FDR_SIGNAL_TYPES`).
+- **Permissions·가드**: 훅 강제(`beforeCaseCreate`·`beforeAgentRun`·`beforeCustomerMessage`) [E4]. `closedByHuman`은 `decidedBy`가 `USR-`로 시작해야만 설정 가능 [E4, `beforeAgentRun` 훅]. 금지 단정 정규식(`FDR_FORBIDDEN_ASSERTIONS`): "보이스피싱/사기입니다·확정", "차단/지급정지 실행 완료" 차단.
+- **External/PII**: 실제 지급정지·계좌 차단·신고는 **미실행**(권고·안내 후보만) — 112/1332 등 외부 신고 절차는 `fdr-report`가 "안내 후보"로만 정리. 개인정보 원문 저장/출력 금지.
+
+### 10.2 전세보호 콘솔 (`jeonse-protection` / `jeonse_cases`) [E4]
+
+- **도메인**: 전세사기 위험·피해 지원 검토(시세·권리·보증·경공매·피해자 지원). **CCL과의 핵심 차이**: (1) **실 공공데이터 엔진**을 갖는 유일한 콘솔 — 국토부/서울 실거래 API로 전세가율·과다 신호를 산출, (2) **생성/검증 분리** 전담 에이전트(`jpo-evaluator`) 보유.
+- **Actors·에이전트 로스터 11종** [E4, `jeonseProtectionAgents`] — 표면 6(`JPO_SURFACE_AGENT_IDS`) + 내부 5. (사이드바 copy "표면 6·내부 10"은 라벨 표기 — 실제 11종과 정합 [미검증].)
+
+| id | 표시명 | domain | 성격 |
+|---|---|---|---|
+| `jpo-intake` | 전세 접수 분류 에이전트 | orchestration | 표면 |
+| `jpo-price` | 시세·유사거래 에이전트 | priceRisk | 표면 |
+| `jpo-registry` | 등기부 체크리스트 에이전트 | registryCheck | 표면 |
+| `jpo-guarantee` | 보증·HUG 체크리스트 에이전트 | guaranteeCheck | 표면 |
+| `jpo-auction` | 경·공매 기한 감시 에이전트 | urgentAuction | 표면 |
+| `jpo-victim` | 피해자 신청 안내 에이전트 | victimApplication | 표면 |
+| `jpo-legal` | 법률지원 연계 에이전트 | supportReferral | 내부 |
+| `jpo-comms` | 임차인 상담 요약 에이전트 | communication | 내부 |
+| `jpo-dataquality` | 데이터 품질·증적 에이전트 | dataQuality | 내부 |
+| `jpo-supervisor` | 감독자 검토 에이전트 | governance | 내부 |
+| `jpo-evaluator` | 루프 검증 에이전트 | evaluation | 내부 |
+
+- **States (보드 컬럼 = 상태) 7종** [E4, `JPO_BOARD_COLUMNS`]: `received(신규 접수) → enriching(데이터 보강 중) → riskReview(위험 신호 검토) → humanReview(담당자 검토 필요) → externalLinked(외부기관 연계) → guidanceDone(지원 안내 완료) / onHold(보류·추가자료 요청)`. 활성=`guidanceDone` 제외 6(`JPO_ACTIVE_CASE_STATUSES`). **CCL과 달리 "데이터 보강"·"외부기관 연계" 상태가 도메인 고유**.
+- **Tables**: `jeonse_cases`·`jeonse_price_snapshots`·`jeonse_risk_signals`·`jeonse_registry_checks`·`jeonse_guarantee_checks`·`jeonse_support_referrals`·`jeonse_evidence`·`jeonse_agent_runs`·`jeonse_audit_logs`·`external_connectors` + 공용 `approvals`·`ai_analysis_requests`·`ai_recommendations`·`agent_handoffs` [E4, `jeonseProtection-db.js`].
+- **`sourceMode`(real/synthetic) — 데이터 출처 정직 표기** [E4, `jeonsePublicData.adapters.js`·`jeonsePriceRisk.service.js`]: 시세 보강은 항상 `sourceMode`를 부착해 반환한다.
+
+| sourceMode | 성격(real/synthetic) | 의미 | 신뢰(confidence) |
+|---|---|---|---|
+| `live_api` | **real** | `?live=1` + 로컬 프록시 정상 시 국토부/서울 실거래 API 응답 | high |
+| `snapshot` | synthetic | 익명 지역 스냅샷(모의 중앙값) — "샘플/스냅샷 기준"으로 항상 표시 | medium |
+| `fallback` | synthetic | API 미연결·호출 실패 — **낮게 확정 금지, "데이터 부족으로 담당자 확인 필요"** + 최소 medium 승격 | low |
+| `manualRequired` | synthetic | HUG·등기부 등 수동 확인 채널(`iros.go.kr`·`khug.or.kr`) | — |
+
+- **`jeonsePublicData` 국토부 실 API** [E4, `JPO_DATASET_LABELS`]: 국토부 아파트/연립다세대/단독·다가구/오피스텔 **매매·전월세 실거래가**(`data.go.kr`) + 서울시 전월세·공동주택 정보(`data.seoul.go.kr`). **API 키는 브라우저에 없다** — 로컬 프록시(`scripts/api-proxy.mjs`)가 환경변수로만 읽고, `?live=1`일 때만 `live_api`. 공시가격은 매매 중앙값 70% **추정**('추정' 표기 필수) [E4, `jpoEstimateOfficialPrice`].
+- **위험 산출**: 전세가율 ≥90%→high·≥80%→medium, 공시가 초과·인근 중앙값 1.2배 초과·표본<5(판단 유보)·등기/보증 미확인(각 medium)·경공매 D-14 이하→critical [E4, `computeJeonseRiskAssessment`]. **전세사기 여부·피해자 결정·보증가입·법률 판단은 확정 금지 — 위험 신호로만** [E4, `JPO_COMMON_BLOCKED_ACTIONS`].
+- **생성/검증 분리**: `jpo-evaluator`는 생성 에이전트와 **다른 함수**로 확정표현·근거부족·PII노출·자동완료를 점검하고 `EVALUATOR_CHECKED` 감사를 남긴다 — CCL에 없는 이 콘솔 고유의 루프 검증 계층 [E4].
+
+### 10.3 JB우리캐피탈 콘솔 (`jb-woori-capital` / `ops_cases`) [E4]
+
+- **도메인**: 캐피탈 운영(개인금융·자동차금융·담보·기업금융·고객관리·문서/전자약정·차량·소비자보호·FDS·민원·내부통제·지표). **CCL과의 핵심 차이**: (1) **유일한 계열사(affiliate) 하네스** — 스코프 키가 `roleKey`가 아니라 `affiliateId` [E4], (2) 도메인 폭이 가장 넓어 **13 에이전트**로 다도메인 라우팅, (3) **훅 미강제**(`enforceHooks:false`) — manifest 구조만 우선 통일, 훅 연결은 다음 단계 TODO [E4, `harnessRegistry.js:64`].
+- **Actors·에이전트 로스터 13종** [E4, `jbWooriCapitalAgents`]:
+
+| id | 표시명 | domain |
+|---|---|---|
+| `jbwc-orchestrator` | JB 분류 오케스트레이터 | orchestration |
+| `jbwc-personal` | 개인금융 운영 에이전트 | personalFinance |
+| `jbwc-auto` | 자동차금융 운영 에이전트 | autoFinance |
+| `jbwc-mortgage` | 담보금융 운영 에이전트 | mortgageSecured |
+| `jbwc-enterprise` | 기업금융 운영 에이전트 | enterpriseFinance |
+| `jbwc-care` | 고객관리 운영 에이전트 | customerManagement |
+| `jbwc-doc` | 문서·전자약정 에이전트 | documentContract |
+| `jbwc-vehicle` | 차량관리 에이전트 | vehicleLifecycle |
+| `jbwc-protect` | 소비자보호 에이전트 | consumerProtection |
+| `jbwc-fds` | FDS·보이스피싱 대응 에이전트 | fdsVoicePhishing |
+| `jbwc-complaint` | 민원·고객센터 에이전트 | complaintContactCenter |
+| `jbwc-compliance` | 내부통제 에이전트 | complianceInternalControl |
+| `jbwc-metrics` | 운영 지표·QA 에이전트 | metrics |
+
+- **States**: 라우팅 결과 상태(`routeJbWooriCapitalCase`) — `triaged` 기본, 도메인별 `waitingDocuments`·`waitingVehicleTask`·`pendingCustomerProtectionReview`·`pendingFdsEscalation`·`pendingApproval` [E4]. high/critical·소비자보호·FDS는 `requiresHumanReview` 강제, FDS/보이스피싱은 `escalationRequired` + 자동완료 금지.
+- **Tables**: `ops_cases`·`ops_tasks`·`document_cases`·`vehicle_lifecycle_tasks`·`consumer_protection_reviews`·`customer_support_cases`·`fds_alerts`·`kpi_snapshots`·`privacy_permission_checks`·`role_assignments` + 공용 `approvals`·`audit_logs`·`ai_recommendations`·`ai_analysis_requests`·`agent_runs`·`agent_handoffs` [E4, `wooricap-db.js`].
+- **Permissions·가드**: 스코프 예외 계약은 `affiliateId scope is required`(role이 아님) [E4, `jbwcTable`]. 공통 금지(`JBWC_COMMON_BLOCKED_ACTIONS`): 실제 대출 승인/거절·금리/한도·신용평가·계좌/결제/자동이체 변경·전자약정 체결·FDS 고위험 자동종결 금지. **훅 가드는 아직 미연결**(구조만) — CCL/FDR/JPO와 달리 verification `enforceHooks:false` [E4, 정합 리스크].
+- **External/PII**: 차량(정비·리콜·과태료·반환), 문서/전자약정, 소비자 권리구제(청약철회·금리인하요구·위법계약해지)까지 다루나 **실행은 전부 mock/운영 참고용** — 실차 처분·실계약 변경·실신용조회 금지.
+
+> **정합 노트 [미검증]**: 4콘솔은 `harness_agents` 통합 레지스트리 + 공용 `approvals`/`agent_handoffs`로 묶이지만, ① CCL의 L0~L4 매트릭스(§3.2)와 각 콘솔의 `riskLevel + requiresHumanReview` 매핑, ② JBWC 훅 미강제 구간의 가드 공백, ③ 사이드바 "표면 N·내부 M" 라벨과 실제 에이전트 수 정합은 모두 [Open Question]으로 §9에 준한다. 발표 시 CCL을 **정합 기준 콘솔**, 나머지 3종을 **동일 계약의 도메인 복제**로 제시 권장 [E1].
 
 ---
 
